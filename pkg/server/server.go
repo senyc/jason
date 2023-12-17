@@ -14,7 +14,23 @@ type Server struct {
 }
 
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
-	s.db.Query()
+	vars := mux.Vars(req)
+	_, err := s.db.GetAllTasksByUser(vars["userId"])
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	task, err := s.db.GetTaskById(vars["userId"], vars["id"])
+	if err != nil {
+		panic(err)
+	}
+	_, err = fmt.Fprintf(w, fmt.Sprint(task))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (s *Server) Start() error {
@@ -27,7 +43,8 @@ func (s *Server) Start() error {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", s.getAllTasks).Methods("GET")
+	r.HandleFunc("/{userId}", s.getAllTasks).Methods("GET")
+	r.HandleFunc("/{userId}/{id}", s.getTaskById).Methods("GET")
 
 	s.server = &http.Server{
 		Addr:    ":8080",

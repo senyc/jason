@@ -13,13 +13,52 @@ type DB struct {
 	conn *sql.DB
 }
 
-func (db *DB) Query() error {
-	if res, err := db.conn.Query("Select title from tasks where id = 1"); err != nil {
-		return err
-	} else {
-		fmt.Print(res)
-		return err
+type Task struct {
+	id       string
+	title    string
+	body     sql.NullString
+	due      sql.NullString
+	priority sql.NullString
+}
+
+func (db *DB) GetTaskById(userId string, taskId string) (Task, error) {
+	var task Task
+
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND id = ? "
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return task, err
 	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId, taskId).Scan(&task.id, &task.title, &task.body, &task.due, &task.priority)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Nothing returned")
+		}
+		return task, err
+	}
+	return task, nil
+}
+
+func (db *DB) GetAllTasksByUser(userId string) (Task, error) {
+	var task Task
+
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return task, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId).Scan(&task.id, &task.title, &task.body, &task.due, &task.priority)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Nothing returned")
+		}
+		return task, err
+	}
+	return task, nil
 }
 
 func (db *DB) Connect() error {
