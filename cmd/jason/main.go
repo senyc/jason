@@ -8,11 +8,16 @@ import (
 )
 
 func main() {
-	// Loads environment variables 
+	// Loads environment variables
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println(err.Error(), "No environment variables found")
+		fmt.Println(err)
 	}
+	server := new(server.Server)
+	err = server.Start()
+	defer server.Shutdown()
 
-	server.Start()
+	if err != nil {
+		panic(err)
+	}
 }

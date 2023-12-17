@@ -3,31 +3,43 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"github.com/senyc/jason/pkg/db"
+
 	"github.com/gorilla/mux"
+	"github.com/senyc/jason/pkg/db"
 )
 
-func getAllTasks(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "get you did it\n")
-	db.Connect()
+type Server struct {
+	db     *db.DB
+	server *http.Server
 }
 
-func handlePost(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "post\n")
+func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
+	s.db.Query()
 }
 
-func Start() {
+func (s *Server) Start() error {
+	s.db = new(db.DB)
+
+	err := s.db.Connect()
+
+	if err != nil {
+		return err
+	}
+
 	r := mux.NewRouter()
-	r.HandleFunc("/", getAllTasks).Methods("GET")
-	r.HandleFunc("/", handlePost).Methods("POST")
+	r.HandleFunc("/", s.getAllTasks).Methods("GET")
 
-	server := &http.Server{
+	s.server = &http.Server{
 		Addr:    ":8080",
 		Handler: r,
 	}
 
-	err := server.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
+	err = s.server.ListenAndServe()
+	return err
+}
+
+func (s *Server) Shutdown() error {
+	// also close the db from here
+	fmt.Println("shutting down")
+	return s.server.Close()
 }
