@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -27,7 +28,13 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = fmt.Fprintf(w, fmt.Sprint(task))
+
+	j, err := json.Marshal(task)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = fmt.Fprintf(w, string(j))
 	if err != nil {
 		panic(err)
 	}
