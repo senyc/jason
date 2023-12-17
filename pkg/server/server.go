@@ -28,17 +28,21 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 	j, err := json.Marshal(task)
+
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = fmt.Fprintf(w, string(j))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
 	if err != nil {
 		panic(err)
 	}
 }
+
 
 func (s *Server) Start() error {
 	s.db = new(db.DB)
