@@ -7,13 +7,14 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/senyc/jason/pkg/types"
 )
 
 type DB struct {
 	conn *sql.DB
 }
 
-type Task struct {
+type taskRow struct {
 	id       string
 	title    string
 	body     sql.NullString
@@ -21,17 +22,43 @@ type Task struct {
 	priority sql.NullString
 }
 
-func (db *DB) GetTaskById(userId string, taskId string) (Task, error) {
-	var task Task
+func removeEmptyValues(task taskRow) types.Task {
+	result := types.Task{
+		Id:       task.id,
+		Title:    task.title,
+		Body:     "",
+		Due:      "",
+		Priority: "",
+	}
 
-	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND id = ? "
+	if task.body.Valid {
+		result.Body = task.body.String
+	}
+
+	if task.due.Valid {
+		result.Due = task.due.String
+	}
+
+	if task.priority.Valid {
+		result.Priority = task.priority.String
+	}
+
+	return result
+}
+
+func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
+	var task types.Task
+	var res taskRow
+
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return task, err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(userId, taskId).Scan(&task.id, &task.title, &task.body, &task.due, &task.priority)
+	err = stmt.QueryRow(userId, taskId).Scan(&res.id, &res.title, &res.body, &res.due, &res.priority)
+	task = removeEmptyValues(res)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Println("Nothing returned")
@@ -41,17 +68,17 @@ func (db *DB) GetTaskById(userId string, taskId string) (Task, error) {
 	return task, nil
 }
 
-func (db *DB) GetAllTasksByUser(userId string) (Task, error) {
-	var task Task
+func (db *DB) GetAllTasksByUser(userId string) (types.Task, error) {
+	var task types.Task
 
-	query := "SELECT id, title, body, due, priority FROM tasks WHERE id = ?"
+	query := "SELECT id, title FROM tasks WHERE id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return task, err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(userId).Scan(&task.id, &task.title, &task.body, &task.due, &task.priority)
+	err = stmt.QueryRow(userId).Scan(&task.Id, &task.Title)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Println("Nothing returned")

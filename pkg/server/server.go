@@ -43,7 +43,6 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-
 func (s *Server) Start() error {
 	s.db = new(db.DB)
 
