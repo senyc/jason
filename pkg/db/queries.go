@@ -71,8 +71,8 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 	return tasks, nil
 }
 
-func (db *DB) AddNewUser(newUser types.NewUser) error {
-	query := "INSERT INTO users (first_name, last_name, email, account_type) VALUES (?, ?, ?, ?)"
+func (db *DB) AddNewUser(newUser types.NewUser, apiKey string) error {
+	query := "INSERT INTO users (first_name, last_name, email, account_type, encoded_api_key) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -80,7 +80,7 @@ func (db *DB) AddNewUser(newUser types.NewUser) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Email, newUser.AccountType)
+	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Email, newUser.AccountType, apiKey)
 	return err
 }
 

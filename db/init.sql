@@ -22,7 +22,8 @@ CREATE TABLE users (
   last_name VARCHAR(50) DEFAULT NULL,
   email VARCHAR(50) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  account_type VARCHAR(10) DEFAULT "standard"
+  account_type VARCHAR(10) DEFAULT "standard",
+  encoded_api_key VARCHAR(64) NOT NULL
 );
 
 ALTER TABLE tasks

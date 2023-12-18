@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/senyc/jason/pkg/auth"
 
 	"github.com/gorilla/mux"
 	"github.com/senyc/jason/pkg/types"
@@ -77,8 +78,9 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
 	}
+	err, apiKey := auth.GetApiKey()
 
-	err = s.db.AddNewUser(newUser)
+	err = s.db.AddNewUser(newUser, apiKey)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
