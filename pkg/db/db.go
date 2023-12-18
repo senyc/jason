@@ -68,24 +68,33 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 	return task, nil
 }
 
-func (db *DB) GetAllTasksByUser(userId string) (types.Task, error) {
-	var task types.Task
+func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
+	var tasks []types.Task
 
-	query := "SELECT id, title FROM tasks WHERE id = ?"
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
-		return task, err
+		return tasks, err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(userId).Scan(&task.Id, &task.Title)
+	rows, err := stmt.Query(userId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Println("Nothing returned")
 		}
-		return task, err
+		return tasks, err
 	}
-	return task, nil
+
+	for rows.Next() {
+		var row taskRow
+		err := rows.Scan(&row.id, &row.title, &row.body, &row.due, &row.priority)
+		if err != nil {
+			return tasks, nil
+		}
+		tasks = append(tasks, removeEmptyValues(row))
+	}
+	return tasks, nil
 }
 
 func (db *DB) Connect() error {

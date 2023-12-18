@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +15,20 @@ type Server struct {
 
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	_, err := s.db.GetAllTasksByUser(vars["userId"])
+	tasks, err := s.db.GetAllTasksByUser(vars["userId"])
+	if err != nil {
+		panic(err)
+	}
+	j, err := json.Marshal(tasks)
+
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
 	if err != nil {
 		panic(err)
 	}
@@ -67,6 +79,5 @@ func (s *Server) Start() error {
 
 func (s *Server) Shutdown() error {
 	// also close the db from here
-	fmt.Println("shutting down")
 	return s.server.Close()
 }
