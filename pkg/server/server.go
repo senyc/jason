@@ -22,12 +22,12 @@ func (s *Server) Start() error {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/{userId}", s.getAllTasks).Methods("GET")
-	r.HandleFunc("/{userId}/{id}", s.getTaskById).Methods("GET")
-	r.HandleFunc("/markCompleted/{userId}/{id}", s.markAsCompleted).Methods("PATCH")
-	r.HandleFunc("/markUncompleted/{userId}/{id}", s.markAsIncomplete).Methods("PATCH")
-	r.HandleFunc("/newTask/{userId}", s.addNewTask).Methods("POST")
-	r.HandleFunc("/newUser", s.addNewUser).Methods("POST")
+	r.HandleFunc("/api/tasks/getAll/{userId}", s.getAllTasks).Methods("GET")
+	r.HandleFunc("/api/tasks/getById/{userId}/{id}", s.getTaskById).Methods("GET")
+	r.HandleFunc("/api/tasks/markComplete/{userId}/{id}", s.markAsCompleted).Methods("PATCH")
+	r.HandleFunc("/api/tasks/markIncomplete/{userId}/{id}", s.markAsIncomplete).Methods("PATCH")
+	r.HandleFunc("/api/tasks/new/{userId}", s.addNewTask).Methods("POST")
+	r.HandleFunc("/api/user/new", s.addNewUser).Methods("POST")
 
 	s.server = &http.Server{
 		Addr:    ":8080",
