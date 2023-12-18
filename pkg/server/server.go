@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/senyc/jason/pkg/db"
+	"github.com/senyc/jason/pkg/types"
 )
 
 type Server struct {
@@ -22,6 +23,7 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	j, err := json.Marshal(tasks)
 
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
 	}
 
@@ -34,6 +36,23 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	var newTask types.NewTask
+
+	err := json.NewDecoder(req.Body).Decode(&newTask)
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.db.AddNewTask(newTask, vars["userId"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	task, err := s.db.GetTaskById(vars["userId"], vars["id"])
@@ -43,6 +62,7 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	j, err := json.Marshal(task)
 
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
 	}
 
@@ -67,6 +87,7 @@ func (s *Server) Start() error {
 	r := mux.NewRouter()
 	r.HandleFunc("/{userId}", s.getAllTasks).Methods("GET")
 	r.HandleFunc("/{userId}/{id}", s.getTaskById).Methods("GET")
+	r.HandleFunc("/newTask/{userId}", s.addNewTask).Methods("POST")
 
 	s.server = &http.Server{
 		Addr:    ":8080",

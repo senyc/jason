@@ -46,6 +46,18 @@ func removeEmptyValues(task taskRow) types.Task {
 	return result
 }
 
+func (db *DB) AddNewTask(newTask types.NewTask, userId string) error {
+	query := "INSERT INTO tasks (user_id, title, body,  priority) VALUES (?, ?, ?, ?)"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(userId, newTask.Title, newTask.Body, newTask.Priority)
+	return err
+}
+
 func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 	var task types.Task
 	var res taskRow
