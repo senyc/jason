@@ -68,3 +68,43 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 }
+
+func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
+	var newUser types.NewUser
+	err := json.NewDecoder(req.Body).Decode(&newUser)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	err = s.db.AddNewUser(newUser)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	err := s.db.MarkTaskCompleted(vars["userId"], vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	err := s.db.MarkTaskIncomplete(vars["userId"], vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

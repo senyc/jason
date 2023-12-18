@@ -10,7 +10,8 @@ CREATE TABLE tasks (
   title VARCHAR(150) NOT NULL,
   body VARCHAR(500) DEFAULT NULL,
   due DATETIME DEFAULT NULL,
-  priority TINYINT DEFAULT 3
+  priority TINYINT DEFAULT 3,
+  completed BOOL DEFAULT false
 );
 
 DROP TABLE IF EXISTS users;
@@ -21,10 +22,10 @@ CREATE TABLE users (
   last_name VARCHAR(50) DEFAULT NULL,
   email VARCHAR(50) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  accunt_type VARCHAR(10) DEFAULT "standard"
+  account_type VARCHAR(10) DEFAULT "standard"
 );
 
 ALTER TABLE tasks
-ADD CONSTRAINT fk_tasks_user
-FOREIGN KEY (user_id)
-REFERENCES users(id);
+  ADD CONSTRAINT fk_tasks_user
+  FOREIGN KEY (user_id)
+  REFERENCES users(id);
