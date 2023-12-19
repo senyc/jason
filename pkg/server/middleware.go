@@ -1,15 +1,18 @@
 package server
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
-func (s *Server) authenticationMiddleware(next http.Handler) http.Handler {
+func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("Authorization")
 		userId, err := s.db.GetUserIdFromApiKey(key)
+
 		if err == nil {
-			r.Header.Del("id")
-			r.Header.Add("id", userId)
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), "userId", userId)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}

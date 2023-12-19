@@ -26,7 +26,7 @@ func (s *Server) Start() error {
     tasks := r.PathPrefix("/api/tasks/").Subrouter()
     user := r.PathPrefix("/api/user/").Subrouter()
 
-	tasks.Use(s.authenticationMiddleware)
+	tasks.Use(s.autorizationMiddleware)
 	tasks.HandleFunc("/all", s.getAllTasks).Methods("GET")
 	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods("GET")
 	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods("PATCH")

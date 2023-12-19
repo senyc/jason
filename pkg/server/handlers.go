@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/senyc/jason/pkg/auth"
@@ -10,8 +11,18 @@ import (
 	"github.com/senyc/jason/pkg/types"
 )
 
+var (
+	noContext error = errors.New("Failure obtaining userId from context")
+)
+
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
-	uid := req.Header.Get("id")
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
+
 	tasks, err := s.db.GetAllTasksByUser(uid)
 	if err != nil {
 		panic(err)
@@ -33,7 +44,12 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
-	uid := req.Header.Get("id")
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
 	var newTask types.NewTask
 
 	err := json.NewDecoder(req.Body).Decode(&newTask)
@@ -50,12 +66,20 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
-	uid := req.Header.Get("id")
 	vars := mux.Vars(req)
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+
+	}
+
 	task, err := s.db.GetTaskById(uid, vars["id"])
 	if err != nil {
 		panic(err)
 	}
+
 	j, err := json.Marshal(task)
 
 	if err != nil {
@@ -107,6 +131,7 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
 	}
+
 	err, apiKey := auth.GetApiKey()
 
 	err = s.db.AddNewUser(newUser, apiKey)
@@ -119,8 +144,15 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
-	uid := req.Header.Get("id")
 	vars := mux.Vars(req)
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+
+	}
+
 	err := s.db.MarkTaskCompleted(uid, vars["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -131,8 +163,15 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
-	uid := req.Header.Get("id")
 	vars := mux.Vars(req)
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+
+	}
+
 	err := s.db.MarkTaskIncomplete(uid, vars["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
