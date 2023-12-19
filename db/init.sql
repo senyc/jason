@@ -18,9 +18,10 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  first_name VARCHAR(50) DEFAULT NULL,
-  last_name VARCHAR(50) DEFAULT NULL,
-  email VARCHAR(50) NOT NULL,
+  first_name VARCHAR(40) NOT NULL,
+  last_name VARCHAR(40) NOT NULL,
+  password VARCHAR(64) NOT NULL,
+  email VARCHAR(64) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   account_type VARCHAR(10) DEFAULT "standard",
   encoded_api_key VARCHAR(64) NOT NULL
@@ -30,3 +31,12 @@ ALTER TABLE tasks
   ADD CONSTRAINT fk_tasks_user
   FOREIGN KEY (user_id)
   REFERENCES users(id);
+
+ALTER TABLE users
+  ADD CONSTRAINT uc_email 
+  UNIQUE (email);
+
+ALTER TABLE users
+  ADD CONSTRAINT uc_full_name 
+  UNIQUE (first_name, last_name);
+
