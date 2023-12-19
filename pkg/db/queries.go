@@ -109,3 +109,33 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 	_, err = stmt.Exec(userId, taskId)
 	return err
 }
+
+func (db *DB) GetApiKey(userAuth types.UserLogin) (string, error) {
+	var apiKey string
+	query := "SELECT encoded_api_key FROM users WHERE email = ? AND password = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return apiKey, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userAuth.Email, userAuth.Password).Scan(&apiKey)
+	return apiKey, err
+}
+
+func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
+	var userId string
+
+	query := "SELECT id FROM users WHERE encoded_api_key = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return userId, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(apiKey).Scan(&userId)
+	return userId, err
+}

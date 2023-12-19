@@ -22,12 +22,19 @@ func (s *Server) Start() error {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/tasks/getAll/{userId}", s.getAllTasks).Methods("GET")
-	r.HandleFunc("/api/tasks/getById/{userId}/{id}", s.getTaskById).Methods("GET")
-	r.HandleFunc("/api/tasks/markComplete/{userId}/{id}", s.markAsCompleted).Methods("PATCH")
-	r.HandleFunc("/api/tasks/markIncomplete/{userId}/{id}", s.markAsIncomplete).Methods("PATCH")
-	r.HandleFunc("/api/tasks/new/{userId}", s.addNewTask).Methods("POST")
-	r.HandleFunc("/api/user/new", s.addNewUser).Methods("POST")
+
+    tasks := r.PathPrefix("/api/tasks/").Subrouter()
+    user := r.PathPrefix("/api/user/").Subrouter()
+
+	tasks.Use(s.authenticationMiddleware)
+	tasks.HandleFunc("/all", s.getAllTasks).Methods("GET")
+	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods("GET")
+	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods("PATCH")
+	tasks.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods("PATCH")
+	tasks.HandleFunc("/new", s.addNewTask).Methods("POST")
+
+	user.HandleFunc("/new", s.addNewUser).Methods("POST")
+	user.HandleFunc("/getApiKey", s.getApiKey).Methods("GET")
 
 	s.server = &http.Server{
 		Addr:    ":8080",
