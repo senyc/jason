@@ -96,13 +96,20 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *Server) getApiKey(w http.ResponseWriter, req *http.Request) {
-	var userAuth types.UserLogin
-	err := json.NewDecoder(req.Body).Decode(&userAuth)
+func (s *Server) newApiKey(w http.ResponseWriter, req *http.Request) {
+	var userLogin types.Email
+	err := json.NewDecoder(req.Body).Decode(&userLogin)
 	if err != nil {
 		panic(err)
 	}
-	apiKey, err := s.db.GetApiKey(userAuth)
+
+	apiKey, err := auth.GetApiKey()
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.db.AddApiKey(userLogin.Email, auth.EncryptApiKey(apiKey))
+
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		panic(err)
@@ -132,9 +139,6 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	// Generate new api key for user
-	apiKey, err := auth.GetApiKey()
-
 	// Encrypt password
 	newUser.Password, err = auth.EncryptPassword(newUser.Password)
 	if err != nil {
@@ -142,7 +146,7 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	err = s.db.AddNewUser(newUser, apiKey)
+	err = s.db.AddNewUser(newUser)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
@@ -203,7 +207,7 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
+	if auth.IsAuthorized(userAuth.Password, encryptedPass) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
 	} else {

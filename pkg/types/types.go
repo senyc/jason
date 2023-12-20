@@ -30,3 +30,7 @@ type User struct {
 type ApiKey struct {
 	ApiKey string `json:"key"`
 }
+
+type Email struct {
+	Email string `json:"email"`
+}

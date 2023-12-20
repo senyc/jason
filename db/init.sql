@@ -24,7 +24,7 @@ CREATE TABLE users (
   email VARCHAR(64) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   account_type VARCHAR(10) DEFAULT "standard",
-  api_key VARCHAR(64) NOT NULL
+  api_key VARCHAR(64) DEFAULT NULL
 );
 
 ALTER TABLE tasks
@@ -35,8 +35,4 @@ ALTER TABLE tasks
 ALTER TABLE users
   ADD CONSTRAINT uc_email 
   UNIQUE (email);
-
-ALTER TABLE users
-  ADD CONSTRAINT uc_full_name 
-  UNIQUE (first_name, last_name);
 

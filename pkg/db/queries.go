@@ -67,8 +67,8 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 	return tasks, nil
 }
 
-func (db *DB) AddNewUser(newUser types.User, apiKey string) error {
-	query := "INSERT INTO users (first_name, last_name, password, email, account_type, api_key) VALUES (?, ?, ?, ?, ?, ?)"
+func (db *DB) AddNewUser(newUser types.User) error {
+	query := "INSERT INTO users (first_name, last_name, password, email, account_type) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -76,7 +76,7 @@ func (db *DB) AddNewUser(newUser types.User, apiKey string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Password, newUser.Email, newUser.AccountType, apiKey)
+	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Password, newUser.Email, newUser.AccountType)
 	return err
 }
 
@@ -106,18 +106,17 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 	return err
 }
 
-func (db *DB) GetApiKey(userAuth types.UserLogin) (string, error) {
-	var apiKey string
-	query := "SELECT api_key FROM users WHERE email = ? AND password = ?"
+func (db *DB) AddApiKey(userLogin string, apiKey string) error {
+	query := "UPDATE users SET api_key = ? WHERE email = ?"
 
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
-		return apiKey, err
+		return err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(userAuth.Email, userAuth.Password).Scan(&apiKey)
-	return apiKey, err
+	_, err = stmt.Exec(apiKey, userLogin)
+	return err
 }
 
 func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {

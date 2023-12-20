@@ -23,19 +23,20 @@ func (s *Server) Start() error {
 
 	r := mux.NewRouter()
 
-    tasks := r.PathPrefix("/api/tasks/").Subrouter()
-    user := r.PathPrefix("/api/user/").Subrouter()
+	tasks := r.PathPrefix("/api/tasks/").Subrouter()
+	user := r.PathPrefix("/api/user/").Subrouter()
 
 	tasks.Use(s.autorizationMiddleware)
-	tasks.HandleFunc("/all", s.getAllTasks).Methods("GET")
-	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods("GET")
-	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods("PATCH")
-	tasks.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods("PATCH")
-	tasks.HandleFunc("/new", s.addNewTask).Methods("POST")
 
-	user.HandleFunc("/new", s.addNewUser).Methods("POST")
-	user.HandleFunc("/login", s.login).Methods("POST")
-	user.HandleFunc("/getApiKey", s.getApiKey).Methods("GET")
+	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
+	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
+	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods(http.MethodPatch)
+	tasks.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods(http.MethodPatch)
+	tasks.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
+
+	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
+	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
+	user.HandleFunc("/key/new", s.newApiKey).Methods(http.MethodPost)
 
 	s.server = &http.Server{
 		Addr:    ":8080",
