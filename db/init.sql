@@ -5,7 +5,7 @@ USE jason;
 DROP TABLE IF EXISTS tasks;
 
 CREATE TABLE tasks (
-  user_id INT NOT NULL,
+  user_id UUID NOT NULL,
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
   body VARCHAR(500) DEFAULT NULL,
@@ -17,15 +17,22 @@ CREATE TABLE tasks (
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  first_name VARCHAR(50) DEFAULT NULL,
-  last_name VARCHAR(50) DEFAULT NULL,
-  email VARCHAR(50) NOT NULL,
+  id UUID DEFAULT UUID() PRIMARY KEY,
+  first_name VARCHAR(40) NOT NULL,
+  last_name VARCHAR(40) NOT NULL,
+  password VARCHAR(100) NOT NULL,
+  email VARCHAR(64) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  account_type VARCHAR(10) DEFAULT "standard"
+  account_type VARCHAR(10) DEFAULT "standard",
+  api_key VARCHAR(64) DEFAULT NULL
 );
 
 ALTER TABLE tasks
   ADD CONSTRAINT fk_tasks_user
   FOREIGN KEY (user_id)
   REFERENCES users(id);
+
+ALTER TABLE users
+  ADD CONSTRAINT uc_email 
+  UNIQUE (email);
+

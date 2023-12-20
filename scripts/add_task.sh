@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-curl -X POST localhost:8080/api/tasks/new/2 -d '{"title": "this is a new task yay", "priority": "2"}'
+curl -H "Authorization: PDt4tr9mGFShyVPkBUZ7Mg" -X POST localhost:8080/api/tasks/new -d '{"title": "this is a new task yay", "priority": "1"}'
+

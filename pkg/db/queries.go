@@ -33,13 +33,8 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 
 	err = stmt.QueryRow(userId, taskId).Scan(&res.id, &res.title, &res.body, &res.due, &res.priority, &res.completed)
 	task = removeEmptyValues(res)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
-		return task, err
-	}
-	return task, nil
+	// Handle empty row path
+	return task, err
 }
 
 func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
@@ -57,6 +52,7 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 		if err == sql.ErrNoRows {
 			fmt.Println("Nothing returned")
 		}
+		// Handle empty row path
 		return tasks, err
 	}
 
@@ -64,15 +60,15 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 		var row taskRow
 		err := rows.Scan(&row.id, &row.title, &row.body, &row.due, &row.priority, &row.completed)
 		if err != nil {
-			return tasks, nil
+			return tasks, err
 		}
 		tasks = append(tasks, removeEmptyValues(row))
 	}
 	return tasks, nil
 }
 
-func (db *DB) AddNewUser(newUser types.NewUser) error {
-	query := "INSERT INTO users (first_name, last_name, email, account_type) VALUES (?, ?, ?, ?)"
+func (db *DB) AddNewUser(newUser types.User) error {
+	query := "INSERT INTO users (first_name, last_name, password, email, account_type) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -80,7 +76,7 @@ func (db *DB) AddNewUser(newUser types.NewUser) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Email, newUser.AccountType)
+	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Password, newUser.Email, newUser.AccountType)
 	return err
 }
 
@@ -108,4 +104,49 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 
 	_, err = stmt.Exec(userId, taskId)
 	return err
+}
+
+func (db *DB) AddApiKey(userLogin string, apiKey string) error {
+	query := "UPDATE users SET api_key = ? WHERE email = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(apiKey, userLogin)
+	return err
+}
+
+func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
+	var userId string
+
+	query := "SELECT id FROM users WHERE api_key = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return userId, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(apiKey).Scan(&userId)
+	return userId, err
+}
+
+func (db *DB) GetPasswordFromLogin(login string) (string, error) {
+	var result string
+	query := "SELECT password from users WHERE email = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(login).Scan(&result)
+
+	return result, err
 }
