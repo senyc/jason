@@ -20,11 +20,11 @@ CREATE TABLE users (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(40) NOT NULL,
   last_name VARCHAR(40) NOT NULL,
-  password VARCHAR(64) NOT NULL,
+  password VARCHAR(100) NOT NULL,
   email VARCHAR(64) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   account_type VARCHAR(10) DEFAULT "standard",
-  encoded_api_key VARCHAR(64) NOT NULL
+  api_key VARCHAR(64) NOT NULL
 );
 
 ALTER TABLE tasks

@@ -132,7 +132,15 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	err, apiKey := auth.GetApiKey()
+	// Generate new api key for user
+	apiKey, err := auth.GetApiKey()
+
+	// Encrypt password
+	newUser.Password, err = auth.EncryptPassword(newUser.Password)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
 
 	err = s.db.AddNewUser(newUser, apiKey)
 	if err != nil {
@@ -179,4 +187,26 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) login(w http.ResponseWriter, req *http.Request) {
+	var userAuth types.UserLogin
+
+	err := json.NewDecoder(req.Body).Decode(&userAuth)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+	encryptedPass, err := s.db.GetPasswordFromLogin(userAuth.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	}
+
+	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
 }

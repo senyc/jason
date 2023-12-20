@@ -33,13 +33,8 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 
 	err = stmt.QueryRow(userId, taskId).Scan(&res.id, &res.title, &res.body, &res.due, &res.priority, &res.completed)
 	task = removeEmptyValues(res)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
-		return task, err
-	}
-	return task, nil
+	// Handle empty row path
+	return task, err
 }
 
 func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
@@ -57,6 +52,7 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 		if err == sql.ErrNoRows {
 			fmt.Println("Nothing returned")
 		}
+		// Handle empty row path
 		return tasks, err
 	}
 
@@ -64,7 +60,7 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 		var row taskRow
 		err := rows.Scan(&row.id, &row.title, &row.body, &row.due, &row.priority, &row.completed)
 		if err != nil {
-			return tasks, nil
+			return tasks, err
 		}
 		tasks = append(tasks, removeEmptyValues(row))
 	}
@@ -72,7 +68,7 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 }
 
 func (db *DB) AddNewUser(newUser types.User, apiKey string) error {
-	query := "INSERT INTO users (first_name, last_name, password, email, account_type, encoded_api_key) VALUES (?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO users (first_name, last_name, password, email, account_type, api_key) VALUES (?, ?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -112,7 +108,7 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 
 func (db *DB) GetApiKey(userAuth types.UserLogin) (string, error) {
 	var apiKey string
-	query := "SELECT encoded_api_key FROM users WHERE email = ? AND password = ?"
+	query := "SELECT api_key FROM users WHERE email = ? AND password = ?"
 
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
@@ -127,7 +123,7 @@ func (db *DB) GetApiKey(userAuth types.UserLogin) (string, error) {
 func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
 	var userId string
 
-	query := "SELECT id FROM users WHERE encoded_api_key = ?"
+	query := "SELECT id FROM users WHERE api_key = ?"
 
 	stmt, err := db.conn.Prepare(query)
 
@@ -138,4 +134,20 @@ func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
 
 	err = stmt.QueryRow(apiKey).Scan(&userId)
 	return userId, err
+}
+
+func (db *DB) GetPasswordFromLogin(login string) (string, error) {
+	var result string
+	query := "SELECT password from users WHERE email = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(login).Scan(&result)
+
+	return result, err
 }

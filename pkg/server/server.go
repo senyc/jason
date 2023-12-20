@@ -34,6 +34,7 @@ func (s *Server) Start() error {
 	tasks.HandleFunc("/new", s.addNewTask).Methods("POST")
 
 	user.HandleFunc("/new", s.addNewUser).Methods("POST")
+	user.HandleFunc("/login", s.login).Methods("POST")
 	user.HandleFunc("/getApiKey", s.getApiKey).Methods("GET")
 
 	s.server = &http.Server{
