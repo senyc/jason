@@ -37,3 +37,4 @@ func EncryptPassword(clearText string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(clearText), bcrypt.DefaultCost)
 	return string(hash), err
 }
+
