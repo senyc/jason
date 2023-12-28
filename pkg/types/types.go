@@ -1,5 +1,7 @@
 package types
 
+import "github.com/golang-jwt/jwt/v5"
+
 type Task struct {
 	Id        string `json:"id"`
 	Title     string `json:"title"`
@@ -33,4 +35,13 @@ type ApiKey struct {
 
 type Email struct {
 	Email string `json:"email"`
+}
+type JwtClaims struct {
+	jwt.RegisteredClaims
+	Uuid string `json:"uuid"`
+	// Add more custom claims here
+}
+
+type JwtResponse struct {
+	Jwt string `json:"jwt"`
 }

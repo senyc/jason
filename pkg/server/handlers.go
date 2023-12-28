@@ -152,7 +152,12 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusOK)
+	uuid, err := s.db.GetUuidFromEmail(newUser.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	}
+	sendJwt(w, uuid)
 }
 
 func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
@@ -193,6 +198,21 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func sendJwt(w http.ResponseWriter, uuid string) error {
+	token, err := auth.GetNewJWT(uuid)
+	res := types.JwtResponse{Jwt: token}
+	j, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
 func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	var userAuth types.UserLogin
 
@@ -206,11 +226,14 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
 	}
-
 	if auth.IsAuthorized(userAuth.Password, encryptedPass) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
-	} else {
-		w.WriteHeader(http.StatusOK)
 	}
+	uuid, err := s.db.GetUuidFromEmail(userAuth.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	}
+	sendJwt(w, uuid)
 }

@@ -150,3 +150,19 @@ func (db *DB) GetPasswordFromLogin(login string) (string, error) {
 
 	return result, err
 }
+
+func (db *DB) GetUuidFromEmail(email string) (string, error) {
+	var result string
+	query := "SELECT id from users WHERE email = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(email).Scan(&result)
+
+	return result, err
+}

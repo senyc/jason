@@ -25,14 +25,21 @@ func (s *Server) Start() error {
 
 	tasks := r.PathPrefix("/api/tasks/").Subrouter()
 	user := r.PathPrefix("/api/user/").Subrouter()
+	site := r.PathPrefix("/site/user/").Subrouter()
 
 	tasks.Use(s.autorizationMiddleware)
-
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
 	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods(http.MethodPatch)
 	tasks.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods(http.MethodPatch)
 	tasks.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
+
+	site.Use(s.jwtAuthorizationMiddleware)
+	site.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
+	site.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
+	site.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods(http.MethodPatch)
+	site.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods(http.MethodPatch)
+	site.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)

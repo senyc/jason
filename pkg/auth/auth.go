@@ -1,10 +1,18 @@
 package auth
 
 import (
+	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"os"
 
+	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/senyc/jason/pkg/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,3 +46,30 @@ func EncryptPassword(clearText string) (string, error) {
 	return string(hash), err
 }
 
+func GetJwtPrivateKey() (*ecdsa.PrivateKey, error) {
+	var privateKey *ecdsa.PrivateKey
+
+	pemFilePath := os.Getenv("AUTH_JWT_PEM_PATH")
+	if pemFilePath == "" {
+		return privateKey, errors.New("No secret file found")
+	}
+	pemFileBytes, err := os.ReadFile(pemFilePath)
+	if err != nil {
+		return privateKey, err
+	}
+	pemBlock, _ := pem.Decode(pemFileBytes)
+	privateKey, err = x509.ParseECPrivateKey(pemBlock.Bytes)
+	return privateKey, err
+}
+
+func GetNewJWT(uuid string) (string, error) {
+	var encodedJwt string
+	claims := types.JwtClaims{Uuid: uuid}
+	j := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	privateKey, err := GetJwtPrivateKey()
+	if err != nil {
+		return encodedJwt, err
+	}
+	encodedJwt, err = j.SignedString(privateKey)
+	return encodedJwt, err
+}
