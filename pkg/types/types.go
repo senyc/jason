@@ -24,8 +24,6 @@ type UserLogin struct {
 
 type User struct {
 	UserLogin
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
 	AccountType string `json:"accountType,omitempty"`
 }
 
