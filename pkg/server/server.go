@@ -1,10 +1,10 @@
 package server
 
 import (
-	"net/http"
-
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/senyc/jason/pkg/db"
+	"net/http"
 )
 
 type Server struct {
@@ -45,6 +45,12 @@ func (s *Server) Start() error {
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
 	user.HandleFunc("/key/new", s.newApiKey).Methods(http.MethodPost)
 
+	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
+	// Set up CORS middleware
+	http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 	s.server = &http.Server{
 		Addr:    ":8080",
 		Handler: r,

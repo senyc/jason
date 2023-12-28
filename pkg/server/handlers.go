@@ -200,6 +200,10 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 
 func sendJwt(w http.ResponseWriter, uuid string) error {
 	token, err := auth.GetNewJWT(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return err
+	}
 	res := types.JwtResponse{Jwt: token}
 	j, err := json.Marshal(res)
 	if err != nil {
@@ -209,7 +213,6 @@ func sendJwt(w http.ResponseWriter, uuid string) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(j)
-	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
@@ -235,5 +238,9 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
 	}
-	sendJwt(w, uuid)
+	err = sendJwt(w, uuid)
+	if err !=nil {
+		panic(err)
+	}
+
 }
