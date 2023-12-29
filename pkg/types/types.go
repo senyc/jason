@@ -11,6 +11,23 @@ type Task struct {
 	Completed bool   `json:"completed"`
 }
 
+type CompletedTask struct {
+	Id            string `json:"id"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	Due           string `json:"due"`
+	Priority      string `json:"priority"`
+	CompletedDate string `json:"completedDate"`
+}
+
+type IncompleteTask struct {
+	Id            string `json:"id"`
+	Title         string `json:"title"`
+	Body          string `json:"body"`
+	Due           string `json:"due"`
+	Priority      string `json:"priority"`
+}
+
 type NewTask struct {
 	Title    string `json:"title"`
 	Body     string `json:"body,omitempty"`

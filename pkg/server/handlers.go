@@ -15,6 +15,66 @@ var (
 	noContext error = errors.New("Failure obtaining userId from context")
 )
 
+func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
+
+	completedTasks, err := s.db.GetCompletedTasks(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	j, err := json.Marshal(completedTasks)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
+
+	incompleteTasks, err := s.db.GetIncompleteTasks(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	j, err := json.Marshal(incompleteTasks)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	uid, ok := ctx.Value("userId").(string)
@@ -239,7 +299,7 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	err = sendJwt(w, uuid)
-	if err !=nil {
+	if err != nil {
 		panic(err)
 	}
 

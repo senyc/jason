@@ -29,6 +29,8 @@ func (s *Server) Start() error {
 
 	tasks.Use(s.autorizationMiddleware)
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
+	tasks.HandleFunc("/complete", s.getCompletedTasks).Methods(http.MethodGet)
+	tasks.HandleFunc("/incomplete", s.getIncompleteTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
 	tasks.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods(http.MethodPatch)
 	tasks.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods(http.MethodPatch)
@@ -36,6 +38,8 @@ func (s *Server) Start() error {
 
 	site.Use(s.jwtAuthorizationMiddleware)
 	site.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
+	site.HandleFunc("/complete", s.getCompletedTasks).Methods(http.MethodGet)
+	site.HandleFunc("/incomplete", s.getIncompleteTasks).Methods(http.MethodGet)
 	site.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
 	site.HandleFunc("/markComplete/{id}", s.markAsCompleted).Methods(http.MethodPatch)
 	site.HandleFunc("/markIncomplete/{id}", s.markAsIncomplete).Methods(http.MethodPatch)
@@ -45,15 +49,13 @@ func (s *Server) Start() error {
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
 	user.HandleFunc("/key/new", s.newApiKey).Methods(http.MethodPost)
 
-	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "PATCH"})
 
-	// Set up CORS middleware
-	http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(r))
 	s.server = &http.Server{
 		Addr:    ":8080",
-		Handler: r,
+		Handler: handlers.CORS(originsOk, headersOk, methodsOk)(r),
 	}
 
 	err = s.server.ListenAndServe()

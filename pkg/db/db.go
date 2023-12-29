@@ -48,6 +48,71 @@ func removeEmptyValues(task taskRow) types.Task {
 	return result
 }
 
+type completedTaskRow struct {
+	id       string
+	title    string
+	body     sql.NullString
+	due      sql.NullString
+	priority sql.NullString
+	completedDate sql.NullString
+}
+
+type incompleteTaskRow struct {
+	id       string
+	title    string
+	body     sql.NullString
+	due      sql.NullString
+	priority sql.NullString
+}
+
+func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
+	result := types.IncompleteTask{
+		Id:       task.id,
+		Title:    task.title,
+		Body:     "",
+		Due:      "",
+		Priority: "",
+	}
+
+	if task.body.Valid {
+		result.Body = task.body.String
+	}
+
+	if task.due.Valid {
+		result.Due = task.due.String
+	}
+
+	if task.priority.Valid {
+		result.Priority = task.priority.String
+	}
+	return result
+}
+
+// TODO: need to actually add the completed date functionality
+func removeEmptyValuesComplete(task completedTaskRow) types.CompletedTask {
+	result := types.CompletedTask{
+		Id:       task.id,
+		Title:    task.title,
+		Body:     "",
+		Due:      "",
+		Priority: "",
+		CompletedDate: "",
+	}
+
+	if task.body.Valid {
+		result.Body = task.body.String
+	}
+
+	if task.due.Valid {
+		result.Due = task.due.String
+	}
+
+	if task.priority.Valid {
+		result.Priority = task.priority.String
+	}
+	return result
+}
+
 func (db *DB) Connect() error {
 	pass := os.Getenv("DB_PASS")
 	user := os.Getenv("DB_USER")
