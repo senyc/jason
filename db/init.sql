@@ -10,20 +10,22 @@ CREATE TABLE tasks (
   title VARCHAR(150) NOT NULL,
   body VARCHAR(500) DEFAULT NULL,
   due DATETIME DEFAULT NULL,
+  time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   priority TINYINT DEFAULT 3,
-  completed BOOL DEFAULT false
+  completed BOOL DEFAULT false,
+  completed_date DATETIME DEFAULT NULL
 );
 
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   id UUID DEFAULT UUID() PRIMARY KEY,
-  first_name VARCHAR(40) NOT NULL,
-  last_name VARCHAR(40) NOT NULL,
+  first_name VARCHAR(40) DEFAULT NULL,
+  last_name VARCHAR(40) DEFAULT NULL,
   password VARCHAR(100) NOT NULL,
   email VARCHAR(64) NOT NULL,
   time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  account_type VARCHAR(10) DEFAULT "standard",
+  account_type VARCHAR(10) DEFAULT NULL,
   api_key VARCHAR(64) DEFAULT NULL
 );
 

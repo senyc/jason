@@ -15,6 +15,66 @@ var (
 	noContext error = errors.New("Failure obtaining userId from context")
 )
 
+func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
+
+	completedTasks, err := s.db.GetCompletedTasks(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	j, err := json.Marshal(completedTasks)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(noContext)
+	}
+
+	incompleteTasks, err := s.db.GetIncompleteTasks(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	j, err := json.Marshal(incompleteTasks)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(j)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	uid, ok := ctx.Value("userId").(string)
@@ -152,7 +212,12 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusOK)
+	uuid, err := s.db.GetUuidFromEmail(newUser.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	}
+	sendJwt(w, uuid)
 }
 
 func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
@@ -193,6 +258,24 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func sendJwt(w http.ResponseWriter, uuid string) error {
+	token, err := auth.GetNewJWT(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return err
+	}
+	res := types.JwtResponse{Jwt: token}
+	j, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+	return nil
+}
+
 func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	var userAuth types.UserLogin
 
@@ -206,11 +289,18 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
 	}
-
 	if auth.IsAuthorized(userAuth.Password, encryptedPass) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
-	} else {
-		w.WriteHeader(http.StatusOK)
 	}
+	uuid, err := s.db.GetUuidFromEmail(userAuth.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		panic(err)
+	}
+	err = sendJwt(w, uuid)
+	if err != nil {
+		panic(err)
+	}
+
 }

@@ -67,8 +67,67 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 	return tasks, nil
 }
 
+func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
+	var tasks []types.CompletedTask
+
+	query := "SELECT id, title, body, due, priority, completed_date FROM tasks WHERE user_id = ? AND completed = true"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return tasks, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Nothing returned")
+		}
+		// Handle empty row path
+		return tasks, err
+	}
+
+	for rows.Next() {
+		var row completedTaskRow
+		err := rows.Scan(&row.id, &row.title, &row.body, &row.due, &row.priority)
+		if err != nil {
+			return tasks, err
+		}
+		tasks = append(tasks, removeEmptyValuesComplete(row))
+	}
+	return tasks, nil
+}
+func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
+	var tasks []types.IncompleteTask
+
+	query := "SELECT id, title, body, due, priority, FROM tasks WHERE user_id = ? AND completed = false"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return tasks, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("Nothing returned")
+		}
+		// Handle empty row path
+		return tasks, err
+	}
+
+	for rows.Next() {
+		var row incompleteTaskRow
+		err := rows.Scan(&row.id, &row.title, &row.body, &row.due, &row.priority)
+		if err != nil {
+			return tasks, err
+		}
+		tasks = append(tasks, removeEmptyValuesIncomplete(row))
+	}
+	return tasks, nil
+}
+
 func (db *DB) AddNewUser(newUser types.User) error {
-	query := "INSERT INTO users (first_name, last_name, password, email, account_type) VALUES (?, ?, ?, ?, ?)"
+	query := "INSERT INTO users (password, email, account_type) VALUES (?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -76,7 +135,7 @@ func (db *DB) AddNewUser(newUser types.User) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newUser.FirstName, newUser.LastName, newUser.Password, newUser.Email, newUser.AccountType)
+	_, err = stmt.Exec(newUser.Password, newUser.Email, newUser.AccountType)
 	return err
 }
 
@@ -147,6 +206,22 @@ func (db *DB) GetPasswordFromLogin(login string) (string, error) {
 	defer stmt.Close()
 
 	err = stmt.QueryRow(login).Scan(&result)
+
+	return result, err
+}
+
+func (db *DB) GetUuidFromEmail(email string) (string, error) {
+	var result string
+	query := "SELECT id from users WHERE email = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(email).Scan(&result)
 
 	return result, err
 }

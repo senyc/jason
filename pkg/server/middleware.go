@@ -3,8 +3,11 @@ package server
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/senyc/jason/pkg/auth"
+	"github.com/senyc/jason/pkg/types"
 )
 
 func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
@@ -18,6 +21,33 @@ func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
 		} else {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
+	})
+}
 
+func (s *Server) jwtAuthorizationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			decodedJwt *jwt.Token
+			err        error
+		)
+		bearerToken := r.Header.Get("Authorization")
+
+		if !strings.HasPrefix(bearerToken, "Bearer") {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		} else {
+			token := strings.TrimPrefix(bearerToken, "Bearer")
+			decodedJwt, err = jwt.ParseWithClaims(token, &types.JwtClaims{}, func(tok *jwt.Token) (any, error) {
+				privateKey, err := auth.GetJwtPrivateKey()
+				return privateKey.PublicKey, err
+			})
+			if err != nil {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+			if claims, ok := decodedJwt.Claims.(*types.JwtClaims); ok && decodedJwt.Valid {
+				ctx := context.WithValue(r.Context(), "userId", claims.Uuid)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			}
+		}
 	})
 }
