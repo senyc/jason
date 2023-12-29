@@ -10,8 +10,10 @@ CREATE TABLE tasks (
   title VARCHAR(150) NOT NULL,
   body VARCHAR(500) DEFAULT NULL,
   due DATETIME DEFAULT NULL,
+  time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   priority TINYINT DEFAULT 3,
-  completed BOOL DEFAULT false
+  completed BOOL DEFAULT false,
+  completed_date DATETIME DEFAULT NULL
 );
 
 DROP TABLE IF EXISTS users;
