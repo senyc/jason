@@ -6,24 +6,25 @@ import (
 	"net/http"
 
 	"github.com/senyc/jason/pkg/auth"
+	"github.com/senyc/jason/pkg/db"
 
-	"github.com/gorilla/mux"
 	"github.com/senyc/jason/pkg/types"
 )
 
 var (
 	noContext error = errors.New("Failure obtaining userId from context")
+	noIdFound error = errors.New("No identification provided")
 )
 
 func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
 	}
 
-	completedTasks, err := s.db.GetCompletedTasks(uid)
+	completedTasks, err := s.db.GetCompletedTasks(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
@@ -47,13 +48,13 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
 	}
 
-	incompleteTasks, err := s.db.GetIncompleteTasks(uid)
+	incompleteTasks, err := s.db.GetIncompleteTasks(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
@@ -77,13 +78,13 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
 	}
 
-	tasks, err := s.db.GetAllTasksByUser(uid)
+	tasks, err := s.db.GetAllTasksByUser(uuid)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +106,7 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
@@ -117,7 +118,7 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	err = s.db.AddNewTask(newTask, uid)
+	err = s.db.AddNewTask(newTask, uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
@@ -148,7 +149,20 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 
 	task, err := s.db.GetTaskById(uuid, id)
 	if err != nil {
-		panic(err)
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
+			return
+		} else {
+			panic(err)
+		}
 	}
 
 	j, err := json.Marshal(task)
@@ -219,7 +233,19 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 
 	err = s.db.AddNewUser(newUser)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		if err == db.NewUserUniquenessConstraintError {
+			w.WriteHeader(http.StatusBadRequest)
+			errResponse := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(errResponse)
+			if err != nil {
+				panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, err = w.Write(j)
+			if err != nil {
+				panic(err)
+			}
+		}
 		panic(err)
 	}
 
@@ -254,8 +280,20 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 
 	err := s.db.MarkTaskCompleted(uuid, id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
+			return
+		} else {
+			panic(err)
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -283,8 +321,19 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 
 	err := s.db.MarkTaskIncomplete(uuid, id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
+		} else {
+			panic(err)
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -333,5 +382,4 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 }
