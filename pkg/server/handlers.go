@@ -126,16 +126,27 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		res := types.ErrResponse{Message: noIdFound.Error()}
+		j, err := json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
+	}
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
 
 	}
 
-	task, err := s.db.GetTaskById(uid, vars["id"])
+	task, err := s.db.GetTaskById(uuid, id)
 	if err != nil {
 		panic(err)
 	}
@@ -221,16 +232,27 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		res := types.ErrResponse{Message: noIdFound.Error()}
+		j, err := json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
+	}
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
 
 	}
 
-	err := s.db.MarkTaskCompleted(uid, vars["id"])
+	err := s.db.MarkTaskCompleted(uuid, id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
@@ -240,21 +262,30 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		res := types.ErrResponse{Message: noIdFound.Error()}
+		j, err := json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
+	}
 	ctx := req.Context()
-	uid, ok := ctx.Value("userId").(string)
+	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(noContext)
-
 	}
 
-	err := s.db.MarkTaskIncomplete(uid, vars["id"])
+	err := s.db.MarkTaskIncomplete(uuid, id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		panic(err)
 	}
-
 	w.WriteHeader(http.StatusOK)
 }
 

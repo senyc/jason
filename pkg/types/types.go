@@ -60,3 +60,7 @@ type JwtClaims struct {
 type JwtResponse struct {
 	Jwt string `json:"jwt"`
 }
+
+type ErrResponse struct {
+	Message string `json:"message"`
+}
