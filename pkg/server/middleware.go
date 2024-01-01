@@ -31,18 +31,18 @@ func (s *Server) jwtAuthorizationMiddleware(next http.Handler) http.Handler {
 			err        error
 		)
 		bearerToken := r.Header.Get("Authorization")
-
 		if !strings.HasPrefix(bearerToken, "Bearer") {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		} else {
 			token := strings.TrimPrefix(bearerToken, "Bearer")
+			token = strings.TrimSpace(token)
 			decodedJwt, err = jwt.ParseWithClaims(token, &types.JwtClaims{}, func(tok *jwt.Token) (any, error) {
 				privateKey, err := auth.GetJwtPrivateKey()
-				return privateKey.PublicKey, err
+				return &privateKey.PublicKey, err
 			})
 			if err != nil {
 				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
+				panic(err)
 			}
 			if claims, ok := decodedJwt.Claims.(*types.JwtClaims); ok && decodedJwt.Valid {
 				ctx := context.WithValue(r.Context(), "userId", claims.Uuid)
