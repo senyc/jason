@@ -19,7 +19,7 @@ type taskRow struct {
 	title    string
 	body     sql.NullString
 	due      sql.NullString
-	priority sql.NullString
+	priority sql.NullInt16
 	completed bool
 }
 
@@ -29,7 +29,7 @@ func removeEmptyValues(task taskRow) types.Task {
 		Title:    task.title,
 		Body:     "",
 		Due:      "",
-		Priority: "",
+		Priority: 3,
 		Completed: task.completed,
 	}
 
@@ -42,7 +42,7 @@ func removeEmptyValues(task taskRow) types.Task {
 	}
 
 	if task.priority.Valid {
-		result.Priority = task.priority.String
+		result.Priority = task.priority.Int16
 	}
 
 	return result
@@ -53,7 +53,7 @@ type completedTaskRow struct {
 	title    string
 	body     sql.NullString
 	due      sql.NullString
-	priority sql.NullString
+	priority sql.NullInt16
 	completedDate sql.NullString
 }
 
@@ -62,7 +62,7 @@ type incompleteTaskRow struct {
 	title    string
 	body     sql.NullString
 	due      sql.NullString
-	priority sql.NullString
+	priority sql.NullInt16
 }
 
 func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
@@ -71,7 +71,7 @@ func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
 		Title:    task.title,
 		Body:     "",
 		Due:      "",
-		Priority: "",
+		Priority: 3,
 	}
 
 	if task.body.Valid {
@@ -83,7 +83,7 @@ func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
 	}
 
 	if task.priority.Valid {
-		result.Priority = task.priority.String
+		result.Priority = task.priority.Int16
 	}
 	return result
 }
@@ -95,7 +95,7 @@ func removeEmptyValuesComplete(task completedTaskRow) types.CompletedTask {
 		Title:    task.title,
 		Body:     "",
 		Due:      "",
-		Priority: "",
+		Priority: 3,
 		CompletedDate: "",
 	}
 
@@ -108,7 +108,7 @@ func removeEmptyValuesComplete(task completedTaskRow) types.CompletedTask {
 	}
 
 	if task.priority.Valid {
-		result.Priority = task.priority.String
+		result.Priority = task.priority.Int16
 	}
 	return result
 }
