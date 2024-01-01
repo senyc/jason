@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
@@ -17,7 +16,7 @@ var (
 const uniqeConstraintErrorId = 1062
 
 func (db *DB) AddNewTask(newTask types.NewTask, userId string) error {
-	query := "INSERT INTO tasks (user_id, title, body,  priority) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO tasks (user_id, title, body, priority) VALUES (?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
@@ -60,9 +59,6 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 
 	rows, err := stmt.Query(userId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}
@@ -90,9 +86,6 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 
 	rows, err := stmt.Query(uuid)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}
@@ -119,9 +112,6 @@ func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
 
 	rows, err := stmt.Query(uuid)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}

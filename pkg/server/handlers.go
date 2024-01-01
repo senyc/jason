@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	noContext error = errors.New("Failure obtaining userId from context")
-	noIdFound error = errors.New("No identification provided")
+	noContext         error = errors.New("Failure obtaining userId from context")
+	noIdFound         error = errors.New("No identification provided")
+	inCorrectPassword error = errors.New("Incorrect password, please try again")
 )
 
 func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
@@ -369,9 +370,16 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		panic(err)
 	}
-	if auth.IsAuthorized(userAuth.Password, encryptedPass) != nil {
+	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		panic(err)
+		errResponse := types.ErrResponse{Message: inCorrectPassword.Error()}
+		j, err := json.Marshal(errResponse)
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
 	}
 	uuid, err := s.db.GetUuidFromEmail(userAuth.Email)
 	if err != nil {
