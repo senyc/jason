@@ -2,14 +2,21 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
 )
 
+var (
+	NoTasksFoundError                = errors.New("No tasks found")
+	NewUserUniquenessConstraintError = errors.New("There is already an account with this email, please use another or login")
+)
+
+const uniqeConstraintErrorId = 1062
+
 func (db *DB) AddNewTask(newTask types.NewTask, userId string) error {
-	query := "INSERT INTO tasks (user_id, title, body,  priority) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO tasks (user_id, title, body, priority) VALUES (?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
@@ -32,6 +39,9 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 	defer stmt.Close()
 
 	err = stmt.QueryRow(userId, taskId).Scan(&res.id, &res.title, &res.body, &res.due, &res.priority, &res.completed)
+	if err == sql.ErrNoRows {
+		return task, NoTasksFoundError
+	}
 	task = removeEmptyValues(res)
 	// Handle empty row path
 	return task, err
@@ -49,9 +59,6 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 
 	rows, err := stmt.Query(userId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}
@@ -79,9 +86,6 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 
 	rows, err := stmt.Query(uuid)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}
@@ -99,7 +103,7 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
 	var tasks []types.IncompleteTask
 
-	query := "SELECT id, title, body, due, priority, FROM tasks WHERE user_id = ? AND completed = false"
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND completed = false"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
@@ -108,9 +112,6 @@ func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
 
 	rows, err := stmt.Query(uuid)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Println("Nothing returned")
-		}
 		// Handle empty row path
 		return tasks, err
 	}
@@ -136,6 +137,14 @@ func (db *DB) AddNewUser(newUser types.User) error {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(newUser.Password, newUser.Email, newUser.AccountType)
+	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == uniqeConstraintErrorId {
+				return NewUserUniquenessConstraintError
+			}
+		}
+	}
+
 	return err
 }
 
@@ -148,8 +157,15 @@ func (db *DB) MarkTaskCompleted(userId string, taskId string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(userId, taskId)
-	return err
+	result, err := stmt.Exec(userId, taskId)
+	if err != nil {
+		return err
+	}
+
+	if v, _ := result.RowsAffected(); v == 0 {
+		return NoTasksFoundError
+	}
+	return nil
 }
 
 func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
@@ -161,8 +177,15 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(userId, taskId)
-	return err
+	result, err := stmt.Exec(userId, taskId)
+	if err != nil {
+		return err
+	}
+
+	if v, _ := result.RowsAffected(); v == 0 {
+		return NoTasksFoundError
+	}
+	return nil
 }
 
 func (db *DB) AddApiKey(userLogin string, apiKey string) error {

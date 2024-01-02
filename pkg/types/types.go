@@ -3,35 +3,35 @@ package types
 import "github.com/golang-jwt/jwt/v5"
 
 type Task struct {
-	Id        string `json:"id"`
+	Id        int    `json:"id"`
 	Title     string `json:"title"`
 	Body      string `json:"body"`
 	Due       string `json:"due"`
-	Priority  string `json:"priority"`
+	Priority  int16  `json:"priority"`
 	Completed bool   `json:"completed"`
 }
 
 type CompletedTask struct {
-	Id            string `json:"id"`
+	Id            int `json:"id"`
 	Title         string `json:"title"`
 	Body          string `json:"body"`
 	Due           string `json:"due"`
-	Priority      string `json:"priority"`
+	Priority      int16  `json:"priority"`
 	CompletedDate string `json:"completedDate"`
 }
 
 type IncompleteTask struct {
-	Id            string `json:"id"`
-	Title         string `json:"title"`
-	Body          string `json:"body"`
-	Due           string `json:"due"`
-	Priority      string `json:"priority"`
+	Id       int    `json:"id"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	Due      string `json:"due"`
+	Priority int16  `json:"priority"`
 }
 
 type NewTask struct {
 	Title    string `json:"title"`
 	Body     string `json:"body,omitempty"`
-	Priority string `json:"priority,omitempty"`
+	Priority int16  `json:"priority,omitempty"`
 }
 
 type UserLogin struct {
@@ -59,4 +59,8 @@ type JwtClaims struct {
 
 type JwtResponse struct {
 	Jwt string `json:"jwt"`
+}
+
+type ErrResponse struct {
+	Message string `json:"message"`
 }
