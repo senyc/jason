@@ -3,7 +3,7 @@ package types
 import "github.com/golang-jwt/jwt/v5"
 
 type Task struct {
-	Id        string `json:"id"`
+	Id        int    `json:"id"`
 	Title     string `json:"title"`
 	Body      string `json:"body"`
 	Due       string `json:"due"`
@@ -12,7 +12,7 @@ type Task struct {
 }
 
 type CompletedTask struct {
-	Id            string `json:"id"`
+	Id            int `json:"id"`
 	Title         string `json:"title"`
 	Body          string `json:"body"`
 	Due           string `json:"due"`
@@ -21,7 +21,7 @@ type CompletedTask struct {
 }
 
 type IncompleteTask struct {
-	Id       string `json:"id"`
+	Id       int    `json:"id"`
 	Title    string `json:"title"`
 	Body     string `json:"body"`
 	Due      string `json:"due"`

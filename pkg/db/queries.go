@@ -103,7 +103,7 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
 	var tasks []types.IncompleteTask
 
-	query := "SELECT id, title, body, due, priority, FROM tasks WHERE user_id = ? AND completed = false"
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND completed = false"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
