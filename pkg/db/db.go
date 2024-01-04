@@ -136,7 +136,7 @@ func (db *DB) Connect() error {
 		domain = "localhost"
 	}
 
-	dbPath := fmt.Sprintf("%s:%s@tcp(%s:%s)/jason", user, pass, domain, port)
+	dbPath := fmt.Sprintf("%s:%s@tcp(%s:%s)/jason?parseTime=true", user, pass, domain, port)
 
 	connection, err := sql.Open("mysql", dbPath)
 	if err != nil {
