@@ -50,7 +50,7 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.Task, error) {
 func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 	var tasks []types.Task
 
-	query := "SELECT id, title, body, due, priority, completed FROM tasks WHERE user_id = ?"
+	query := "SELECT id, title, body, due, priority, completed FROM tasks WHERE user_id = ? ORDER BY due DESC"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
@@ -77,7 +77,7 @@ func (db *DB) GetAllTasksByUser(userId string) ([]types.Task, error) {
 func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 	var tasks []types.CompletedTask
 
-	query := "SELECT id, title, body, due, priority, completed_date FROM tasks WHERE user_id = ? AND completed = true"
+	query := "SELECT id, title, body, due, priority, completed_date FROM tasks WHERE user_id = ? AND completed = true ORDER BY due DESC"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
@@ -103,7 +103,7 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.CompletedTask, error) {
 func (db *DB) GetIncompleteTasks(uuid string) ([]types.IncompleteTask, error) {
 	var tasks []types.IncompleteTask
 
-	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND completed = false"
+	query := "SELECT id, title, body, due, priority FROM tasks WHERE user_id = ? AND completed = false ORDER BY due DESC"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
