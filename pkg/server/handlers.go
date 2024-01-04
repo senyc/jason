@@ -22,20 +22,20 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 	}
 
 	completedTasks, err := s.db.GetCompletedTasks(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	j, err := json.Marshal(completedTasks)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -43,7 +43,7 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 	_, err = w.Write(j)
 
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }
 
@@ -52,20 +52,20 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 	}
 
 	incompleteTasks, err := s.db.GetIncompleteTasks(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	j, err := json.Marshal(incompleteTasks)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -73,7 +73,7 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 	_, err = w.Write(j)
 
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }
 
@@ -82,18 +82,18 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 	}
 
 	tasks, err := s.db.GetAllTasksByUser(uuid)
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 	j, err := json.Marshal(tasks)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -101,7 +101,7 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 	_, err = w.Write(j)
 
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }
 
@@ -110,19 +110,19 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 	}
 	var newTask types.NewTask
 
 	err := json.NewDecoder(req.Body).Decode(&newTask)
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	err = s.db.AddNewTask(newTask, uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -134,7 +134,7 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 		res := types.ErrResponse{Message: noIdFound.Error()}
 		j, err := json.Marshal(res)
 		if err != nil {
-			panic(err)
+			s.logger.Panic(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(j)
@@ -144,7 +144,7 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 
 	}
 
@@ -156,13 +156,13 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 			res := types.ErrResponse{Message: err.Error()}
 			j, err := json.Marshal(res)
 			if err != nil {
-				panic(err)
+				s.logger.Panic(err)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(j)
 			return
 		} else {
-			panic(err)
+			s.logger.Panic(err)
 		}
 	}
 
@@ -170,7 +170,7 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -178,7 +178,7 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 	_, err = w.Write(j)
 
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }
 
@@ -186,33 +186,33 @@ func (s *Server) newApiKey(w http.ResponseWriter, req *http.Request) {
 	var userLogin types.Email
 	err := json.NewDecoder(req.Body).Decode(&userLogin)
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	apiKey, err := auth.GetApiKey()
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	err = s.db.AddApiKey(userLogin.Email, auth.EncryptApiKey(apiKey))
 
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	response := types.ApiKey{ApiKey: apiKey}
 
 	j, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(j)
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }
 
@@ -222,14 +222,14 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	// Encrypt password
 	newUser.Password, err = auth.EncryptPassword(newUser.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	err = s.db.AddNewUser(newUser)
@@ -239,21 +239,21 @@ func (s *Server) addNewUser(w http.ResponseWriter, req *http.Request) {
 			errResponse := types.ErrResponse{Message: err.Error()}
 			j, err := json.Marshal(errResponse)
 			if err != nil {
-				panic(err)
+				s.logger.Panic(err)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_, err = w.Write(j)
 			if err != nil {
-				panic(err)
+				s.logger.Panic(err)
 			}
 		}
-		panic(err)
+		s.logger.Panic(err)
 	}
 
 	uuid, err := s.db.GetUuidFromEmail(newUser.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	sendJwt(w, uuid)
 }
@@ -265,7 +265,7 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 		res := types.ErrResponse{Message: noIdFound.Error()}
 		j, err := json.Marshal(res)
 		if err != nil {
-			panic(err)
+			s.logger.Panic(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(j)
@@ -275,7 +275,7 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 
 	}
 
@@ -287,13 +287,13 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 			res := types.ErrResponse{Message: err.Error()}
 			j, err := json.Marshal(res)
 			if err != nil {
-				panic(err)
+				s.logger.Panic(err)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(j)
 			return
 		} else {
-			panic(err)
+			s.logger.Panic(err)
 		}
 	}
 
@@ -307,7 +307,7 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 		res := types.ErrResponse{Message: noIdFound.Error()}
 		j, err := json.Marshal(res)
 		if err != nil {
-			panic(err)
+			s.logger.Panic(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(j)
@@ -317,7 +317,7 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(noContext)
+		s.logger.Panic(noContext)
 	}
 
 	err := s.db.MarkTaskIncomplete(uuid, id)
@@ -328,12 +328,12 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 			res := types.ErrResponse{Message: err.Error()}
 			j, err := json.Marshal(res)
 			if err != nil {
-				panic(err)
+				s.logger.Panic(err)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(j)
 		} else {
-			panic(err)
+			s.logger.Panic(err)
 		}
 	}
 	w.WriteHeader(http.StatusOK)
@@ -363,19 +363,19 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	err := json.NewDecoder(req.Body).Decode(&userAuth)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	encryptedPass, err := s.db.GetPasswordFromLogin(userAuth.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		errResponse := types.ErrResponse{Message: inCorrectPassword.Error()}
 		j, err := json.Marshal(errResponse)
 		if err != nil {
-			panic(err)
+			s.logger.Panic(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(j)
@@ -384,10 +384,10 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	uuid, err := s.db.GetUuidFromEmail(userAuth.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		panic(err)
+		s.logger.Panic(err)
 	}
 	err = sendJwt(w, uuid)
 	if err != nil {
-		panic(err)
+		s.logger.Panic(err)
 	}
 }

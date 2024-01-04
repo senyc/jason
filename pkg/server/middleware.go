@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,6 +20,7 @@ func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), "userId", userId)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
+			s.logger.Panic(err)
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 	})
@@ -42,7 +44,7 @@ func (s *Server) jwtAuthorizationMiddleware(next http.Handler) http.Handler {
 			})
 			if err != nil {
 				http.Error(w, "Forbidden", http.StatusForbidden)
-				panic(err)
+				s.logger.Panic(fmt.Errorf("jwt auth failure %v", err))
 			}
 			if claims, ok := decodedJwt.Claims.(*types.JwtClaims); ok && decodedJwt.Valid {
 				ctx := context.WithValue(r.Context(), "userId", claims.Uuid)

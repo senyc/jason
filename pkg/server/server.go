@@ -1,15 +1,19 @@
 package server
 
 import (
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/senyc/jason/pkg/db"
-	"net/http"
 )
 
 type Server struct {
 	db     *db.DB
 	server *http.Server
+	logger *log.Logger
 }
 
 func (s *Server) Start() error {
@@ -20,6 +24,7 @@ func (s *Server) Start() error {
 	if err != nil {
 		return err
 	}
+	s.logger = log.New(os.Stdout, "log:", log.LstdFlags|log.Lshortfile)
 
 	r := mux.NewRouter()
 
