@@ -1,37 +1,41 @@
 package types
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+	"time"
+)
 
 type Task struct {
-	Id        int    `json:"id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	Due       string `json:"due"`
-	Priority  int16  `json:"priority"`
-	Completed bool   `json:"completed"`
+	Id        int       `json:"id"`
+	Title     string    `json:"title"`
+	Body      string    `json:"body"`
+	Due       time.Time `json:"due,omitempty"`
+	Priority  int16     `json:"priority"`
+	Completed bool      `json:"completed"`
 }
 
 type CompletedTask struct {
-	Id            int `json:"id"`
-	Title         string `json:"title"`
-	Body          string `json:"body"`
-	Due           string `json:"due"`
-	Priority      int16  `json:"priority"`
-	CompletedDate string `json:"completedDate"`
+	Id            int       `json:"id"`
+	Title         string    `json:"title"`
+	Body          string    `json:"body"`
+	Due           time.Time `json:"due,omitempty"`
+	Priority      int16     `json:"priority"`
+	CompletedDate string    `json:"completedDate"`
 }
 
 type IncompleteTask struct {
-	Id       int    `json:"id"`
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	Due      string `json:"due"`
-	Priority int16  `json:"priority"`
+	Id       int       `json:"id"`
+	Title    string    `json:"title"`
+	Body     string    `json:"body"`
+	Due      time.Time `json:"due,omitempty"`
+	Priority int16     `json:"priority"`
 }
 
 type NewTask struct {
-	Title    string `json:"title"`
-	Body     string `json:"body,omitempty"`
-	Priority int16  `json:"priority,omitempty"`
+	Title    string    `json:"title"`
+	Body     string    `json:"body,omitempty"`
+	Due      time.Time `json:"due,omitempty"`
+	Priority int16     `json:"priority,omitempty"`
 }
 
 type UserLogin struct {

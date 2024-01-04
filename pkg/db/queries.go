@@ -16,14 +16,14 @@ var (
 const uniqeConstraintErrorId = 1062
 
 func (db *DB) AddNewTask(newTask types.NewTask, userId string) error {
-	query := "INSERT INTO tasks (user_id, title, body, priority) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO tasks (user_id, title, body, priority, due) VALUES (?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(userId, newTask.Title, newTask.Body, newTask.Priority)
+	_, err = stmt.Exec(userId, newTask.Title, newTask.Body, newTask.Priority, newTask.Due)
 	return err
 }
 

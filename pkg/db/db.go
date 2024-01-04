@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
@@ -18,7 +19,7 @@ type taskRow struct {
 	id        int
 	title     string
 	body      sql.NullString
-	due       sql.NullString
+	due       sql.NullTime
 	priority  sql.NullInt16
 	completed bool
 }
@@ -28,7 +29,7 @@ func removeEmptyValues(task taskRow) types.Task {
 		Id:        task.id,
 		Title:     task.title,
 		Body:      "",
-		Due:       "",
+		Due:       time.Time{},
 		Priority:  3,
 		Completed: task.completed,
 	}
@@ -38,7 +39,7 @@ func removeEmptyValues(task taskRow) types.Task {
 	}
 
 	if task.due.Valid {
-		result.Due = task.due.String
+		result.Due = task.due.Time
 	}
 
 	if task.priority.Valid {
@@ -52,7 +53,7 @@ type completedTaskRow struct {
 	id            int
 	title         string
 	body          sql.NullString
-	due           sql.NullString
+	due           sql.NullTime
 	priority      sql.NullInt16
 	completedDate sql.NullString
 }
@@ -61,7 +62,7 @@ type incompleteTaskRow struct {
 	id       int
 	title    string
 	body     sql.NullString
-	due      sql.NullString
+	due      sql.NullTime
 	priority sql.NullInt16
 }
 
@@ -70,7 +71,7 @@ func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
 		Id:       task.id,
 		Title:    task.title,
 		Body:     "",
-		Due:      "",
+		Due:      time.Time{},
 		Priority: 3,
 	}
 
@@ -79,7 +80,7 @@ func removeEmptyValuesIncomplete(task incompleteTaskRow) types.IncompleteTask {
 	}
 
 	if task.due.Valid {
-		result.Due = task.due.String
+		result.Due = task.due.Time
 	}
 
 	if task.priority.Valid {
@@ -94,7 +95,7 @@ func removeEmptyValuesComplete(task completedTaskRow) types.CompletedTask {
 		Id:            task.id,
 		Title:         task.title,
 		Body:          "",
-		Due:           "",
+		Due:           time.Time{},
 		Priority:      3,
 		CompletedDate: "",
 	}
@@ -104,7 +105,7 @@ func removeEmptyValuesComplete(task completedTaskRow) types.CompletedTask {
 	}
 
 	if task.due.Valid {
-		result.Due = task.due.String
+		result.Due = task.due.Time
 	}
 
 	if task.priority.Valid {
