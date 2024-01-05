@@ -1,46 +1,76 @@
 package types
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"database/sql"
+	"time"
 
-type Task struct {
-	Id        int    `json:"id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	Due       string `json:"due"`
-	Priority  int16  `json:"priority"`
-	Completed bool   `json:"completed"`
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type NullTime struct {
+	time.Time
 }
 
-type CompletedTask struct {
-	Id            int `json:"id"`
-	Title         string `json:"title"`
-	Body          string `json:"body"`
-	Due           string `json:"due"`
-	Priority      int16  `json:"priority"`
-	CompletedDate string `json:"completedDate"`
+func (t NullTime) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
+		return []byte("null"), nil
+	} else {
+		return t.Time.MarshalJSON()
+	}
 }
 
-type IncompleteTask struct {
-	Id       int    `json:"id"`
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	Due      string `json:"due"`
-	Priority int16  `json:"priority"`
+type SqlTasksRow struct {
+	Id            int
+	Title         string
+	Body          sql.NullString
+	Due           sql.NullTime
+	TimeCreated   time.Time
+	Priority      int16
+	Completed     bool
+	CompletedDate sql.NullTime
 }
 
-type NewTask struct {
-	Title    string `json:"title"`
-	Body     string `json:"body,omitempty"`
-	Priority int16  `json:"priority,omitempty"`
+type TaskReponse struct {
+	Id            int        `json:"id"`
+	Title         string     `json:"title"`
+	Body          string     `json:"body"`
+	Due           NullTime   `json:"due"`
+	Priority      int16      `json:"priority"`
+	Completed     bool       `json:"completed"`
+	CompletedDate *time.Time `json:"completedDate,omitempty"`
 }
 
-type UserLogin struct {
+type CompletedTaskResponse struct {
+	Id            int       `json:"id"`
+	Title         string    `json:"title"`
+	Body          string    `json:"body"`
+	Due           NullTime  `json:"due"`
+	Priority      int16     `json:"priority"`
+	CompletedDate time.Time `json:"completedDate,omitempty"`
+}
+
+type IncompleteTaskResponse struct {
+	Id       int      `json:"id"`
+	Title    string   `json:"title"`
+	Body     string   `json:"body"`
+	Due      NullTime `json:"due"`
+	Priority int16    `json:"priority"`
+}
+
+type NewTaskPayload struct {
+	Title    string    `json:"title"`
+	Body     string    `json:"body"`
+	Due      time.Time `json:"due"`
+	Priority int16     `json:"priority,omitempty"`
+}
+
+type UserLoginPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type User struct {
-	UserLogin
+	UserLoginPayload
 	AccountType string `json:"accountType,omitempty"`
 }
 
