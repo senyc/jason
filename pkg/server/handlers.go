@@ -7,6 +7,7 @@ import (
 
 	"github.com/senyc/jason/pkg/auth"
 	"github.com/senyc/jason/pkg/db"
+	"github.com/senyc/jason/pkg/dbconv"
 
 	"github.com/senyc/jason/pkg/types"
 )
@@ -18,6 +19,7 @@ var (
 )
 
 func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
+	var res []types.CompletedTaskResponse
 	ctx := req.Context()
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
@@ -26,12 +28,18 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 	}
 
 	completedTasks, err := s.db.GetCompletedTasks(uuid)
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(err)
 	}
 
-	j, err := json.Marshal(completedTasks)
+	for _, row := range completedTasks {
+		task, _ := dbconv.ToCompletedTaskResponse(row)
+		res = append(res, task)
+	}
+
+	j, err := json.Marshal(res)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -48,6 +56,7 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
+	var res []types.IncompleteTaskResponse
 	ctx := req.Context()
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
@@ -61,7 +70,12 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 		s.logger.Panic(err)
 	}
 
-	j, err := json.Marshal(incompleteTasks)
+	for _, row := range incompleteTasks {
+		task, _ := dbconv.ToIncompleteTaskResponse(row)
+		res = append(res, task)
+	}
+
+	j, err := json.Marshal(res)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -78,6 +92,7 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
+	var res []types.TaskReponse
 	ctx := req.Context()
 	uuid, ok := ctx.Value("userId").(string)
 	if !ok {
@@ -85,11 +100,16 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 		s.logger.Panic(noContext)
 	}
 
-	tasks, err := s.db.GetAllTasksByUser(uuid)
+	allTasks, err := s.db.GetAllTasksByUser(uuid)
 	if err != nil {
 		s.logger.Panic(err)
 	}
-	j, err := json.Marshal(tasks)
+
+	for _, row := range allTasks {
+		task, _ := dbconv.ToTaskResponse(row)
+		res = append(res, task)
+	}
+	j, err := json.Marshal(res)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -112,7 +132,7 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(noContext)
 	}
-	var newTask types.NewTask
+	var newTask types.NewTaskPayload
 
 	err := json.NewDecoder(req.Body).Decode(&newTask)
 	if err != nil {
@@ -128,6 +148,7 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
+	var res types.TaskReponse
 	id := req.URL.Query().Get("id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -166,7 +187,8 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	j, err := json.Marshal(task)
+	res, _ = dbconv.ToTaskResponse(task)
+	j, err := json.Marshal(res)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -358,7 +380,7 @@ func sendJwt(w http.ResponseWriter, uuid string) error {
 }
 
 func (s *Server) login(w http.ResponseWriter, req *http.Request) {
-	var userAuth types.UserLogin
+	var userAuth types.UserLoginPayload
 
 	err := json.NewDecoder(req.Body).Decode(&userAuth)
 	if err != nil {

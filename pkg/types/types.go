@@ -1,50 +1,76 @@
 package types
 
 import (
-	"github.com/golang-jwt/jwt/v5"
+	"database/sql"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type Task struct {
-	Id        int       `json:"id"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
-	Due       time.Time `json:"due,omitempty"`
-	Priority  int16     `json:"priority"`
-	Completed bool      `json:"completed"`
+type NilTime struct {
+	time.Time
 }
 
-type CompletedTask struct {
+func (t NilTime) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
+		return []byte("null"), nil
+	} else {
+		return t.Time.MarshalJSON()
+	}
+}
+
+type SqlTasksRow struct {
+	Id            int
+	Title         string
+	Body          sql.NullString
+	Due           sql.NullTime
+	TimeCreated   time.Time
+	Priority      int16
+	Completed     bool
+	CompletedDate sql.NullTime
+}
+
+type TaskReponse struct {
+	Id            int     `json:"id"`
+	Title         string  `json:"title"`
+	Body          string  `json:"body,omitempty"`
+	Due           NilTime `json:"due,omitempty"`
+	Priority      int16   `json:"priority"`
+	Completed     bool    `json:"completed"`
+	CompletedDate NilTime `json:"completedDate,omitempty"`
+}
+
+type CompletedTaskResponse struct {
 	Id            int       `json:"id"`
 	Title         string    `json:"title"`
-	Body          string    `json:"body"`
-	Due           time.Time `json:"due,omitempty"`
+	Body          string    `json:"body,omitempty"`
+	Due           NilTime   `json:"due,omitempty"`
 	Priority      int16     `json:"priority"`
-	CompletedDate string    `json:"completedDate"`
+	CompletedDate time.Time `json:"completedDate"`
 }
 
-type IncompleteTask struct {
-	Id       int       `json:"id"`
-	Title    string    `json:"title"`
-	Body     string    `json:"body"`
-	Due      time.Time `json:"due,omitempty"`
-	Priority int16     `json:"priority"`
+type IncompleteTaskResponse struct {
+	Id       int     `json:"id"`
+	Title    string  `json:"title"`
+	Body     string  `json:"body,omitempty"`
+	Due      NilTime `json:"due,omitempty"`
+	Priority int16   `json:"priority"`
 }
 
-type NewTask struct {
+type NewTaskPayload struct {
 	Title    string    `json:"title"`
 	Body     string    `json:"body,omitempty"`
 	Due      time.Time `json:"due,omitempty"`
 	Priority int16     `json:"priority,omitempty"`
 }
 
-type UserLogin struct {
+type UserLoginPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type User struct {
-	UserLogin
+	UserLoginPayload
 	AccountType string `json:"accountType,omitempty"`
 }
 
