@@ -7,18 +7,19 @@ import (
 )
 
 func ToTaskResponse(r types.SqlTasksRow) (types.TaskReponse, error) {
+	var completedDate *time.Time
 	result := types.TaskReponse{
 		Id:            r.Id,
 		Title:         r.Title,
 		Body:          "",
-		Due:           types.NilTime{},
+		Due:           types.NullTime{},
 		Priority:      r.Priority,
 		Completed:     r.Completed,
-		CompletedDate: types.NilTime{},
+		CompletedDate: completedDate,
 	}
 
 	if r.Due.Valid {
-		result.Due = types.NilTime{r.Due.Time}
+		result.Due = types.NullTime{r.Due.Time}
 	}
 
 	if r.Body.Valid {
@@ -26,7 +27,7 @@ func ToTaskResponse(r types.SqlTasksRow) (types.TaskReponse, error) {
 	}
 
 	if r.CompletedDate.Valid {
-		result.CompletedDate = types.NilTime{r.CompletedDate.Time}
+		result.CompletedDate = &r.CompletedDate.Time
 	}
 
 	return result, nil
@@ -37,13 +38,13 @@ func ToCompletedTaskResponse(r types.SqlTasksRow) (types.CompletedTaskResponse, 
 		Id:            r.Id,
 		Title:         r.Title,
 		Body:          "",
-		Due:           types.NilTime{},
+		Due:           types.NullTime{},
 		Priority:      r.Priority,
 		CompletedDate: time.Time{},
 	}
 
 	if r.Due.Valid {
-		result.Due = types.NilTime{r.Due.Time}
+		result.Due = types.NullTime{r.Due.Time}
 	}
 
 	if r.CompletedDate.Valid {
@@ -62,12 +63,12 @@ func ToIncompleteTaskResponse(r types.SqlTasksRow) (types.IncompleteTaskResponse
 		Id:       r.Id,
 		Title:    r.Title,
 		Body:     "",
-		Due:      types.NilTime{},
+		Due:      types.NullTime{},
 		Priority: r.Priority,
 	}
 
 	if r.Due.Valid {
-		result.Due = types.NilTime{r.Due.Time}
+		result.Due = types.NullTime{r.Due.Time}
 	}
 
 	if r.Body.Valid {

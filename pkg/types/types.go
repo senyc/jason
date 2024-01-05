@@ -7,11 +7,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type NilTime struct {
+type NullTime struct {
 	time.Time
 }
 
-func (t NilTime) MarshalJSON() ([]byte, error) {
+func (t NullTime) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
 		return []byte("null"), nil
 	} else {
@@ -31,36 +31,36 @@ type SqlTasksRow struct {
 }
 
 type TaskReponse struct {
-	Id            int     `json:"id"`
-	Title         string  `json:"title"`
-	Body          string  `json:"body,omitempty"`
-	Due           NilTime `json:"due,omitempty"`
-	Priority      int16   `json:"priority"`
-	Completed     bool    `json:"completed"`
-	CompletedDate NilTime `json:"completedDate,omitempty"`
+	Id            int        `json:"id"`
+	Title         string     `json:"title"`
+	Body          string     `json:"body"`
+	Due           NullTime   `json:"due"`
+	Priority      int16      `json:"priority"`
+	Completed     bool       `json:"completed"`
+	CompletedDate *time.Time `json:"completedDate,omitempty"`
 }
 
 type CompletedTaskResponse struct {
 	Id            int       `json:"id"`
 	Title         string    `json:"title"`
-	Body          string    `json:"body,omitempty"`
-	Due           NilTime   `json:"due,omitempty"`
+	Body          string    `json:"body"`
+	Due           NullTime  `json:"due"`
 	Priority      int16     `json:"priority"`
-	CompletedDate time.Time `json:"completedDate"`
+	CompletedDate time.Time `json:"completedDate,omitempty"`
 }
 
 type IncompleteTaskResponse struct {
-	Id       int     `json:"id"`
-	Title    string  `json:"title"`
-	Body     string  `json:"body,omitempty"`
-	Due      NilTime `json:"due,omitempty"`
-	Priority int16   `json:"priority"`
+	Id       int      `json:"id"`
+	Title    string   `json:"title"`
+	Body     string   `json:"body"`
+	Due      NullTime `json:"due"`
+	Priority int16    `json:"priority"`
 }
 
 type NewTaskPayload struct {
 	Title    string    `json:"title"`
-	Body     string    `json:"body,omitempty"`
-	Due      time.Time `json:"due,omitempty"`
+	Body     string    `json:"body"`
+	Due      time.Time `json:"due"`
 	Priority int16     `json:"priority,omitempty"`
 }
 
