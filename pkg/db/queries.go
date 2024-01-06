@@ -146,7 +146,7 @@ func (db *DB) AddNewUser(newUser types.User) error {
 }
 
 func (db *DB) MarkTaskCompleted(userId string, taskId string) error {
-	query := "UPDATE tasks SET completed = 1 WHERE user_id = ? AND id = ?"
+	query := "UPDATE tasks SET completed = 1, completed_date = CURTIME() WHERE user_id = ? AND id = ?"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
@@ -166,7 +166,7 @@ func (db *DB) MarkTaskCompleted(userId string, taskId string) error {
 }
 
 func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
-	query := "UPDATE tasks SET completed = 0 WHERE user_id = ? AND id = ?"
+	query := "UPDATE tasks SET completed = 0, completed_date = NULL WHERE user_id = ? AND id = ?"
 	stmt, err := db.conn.Prepare(query)
 
 	if err != nil {
