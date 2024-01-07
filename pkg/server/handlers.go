@@ -318,8 +318,6 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 			s.logger.Panic(err)
 		}
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
@@ -358,7 +356,6 @@ func (s *Server) markAsIncomplete(w http.ResponseWriter, req *http.Request) {
 			s.logger.Panic(err)
 		}
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func sendJwt(w http.ResponseWriter, uuid string) error {
