@@ -36,7 +36,7 @@ func (s *Server) Start() error {
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/complete", s.getCompletedTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/incomplete", s.getIncompleteTasks).Methods(http.MethodGet)
-	tasks.HandleFunc("/byId/{id}", s.getTaskById).Methods(http.MethodGet)
+	tasks.HandleFunc("/byId", s.getTaskById).Methods(http.MethodGet)
 	tasks.HandleFunc("/markComplete", s.markAsCompleted).Methods(http.MethodPatch)
 	tasks.HandleFunc("/markIncomplete", s.markAsIncomplete).Methods(http.MethodPatch)
 	tasks.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
