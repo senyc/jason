@@ -245,3 +245,23 @@ func (db *DB) GetUuidFromEmail(email string) (string, error) {
 
 	return result, err
 }
+
+func (db *DB) DeleteTask(userId string, taskId string) error {
+	query := "DELETE FROM tasks WHERE user_id = ? AND id = ?"
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(userId, taskId)
+	if err != nil {
+		return err
+	}
+
+	if v, _ := result.RowsAffected(); v == 0 {
+		return NoTasksFoundError
+	}
+	return nil
+}

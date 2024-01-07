@@ -410,3 +410,43 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		s.logger.Panic(err)
 	}
 }
+
+func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		res := types.ErrResponse{Message: noIdFound.Error()}
+		j, err := json.Marshal(res)
+		if err != nil {
+			s.logger.Panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
+	}
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+
+	}
+
+	err := s.db.DeleteTask(uuid, id)
+	if err != nil {
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				s.logger.Panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
+			return
+		} else {
+			s.logger.Panic(err)
+		}
+	}
+}

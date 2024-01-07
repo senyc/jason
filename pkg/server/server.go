@@ -40,6 +40,7 @@ func (s *Server) Start() error {
 	tasks.HandleFunc("/markComplete", s.markAsCompleted).Methods(http.MethodPatch)
 	tasks.HandleFunc("/markIncomplete", s.markAsIncomplete).Methods(http.MethodPatch)
 	tasks.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
+	tasks.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
 
 	site.Use(s.jwtAuthorizationMiddleware)
 	site.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
@@ -49,6 +50,7 @@ func (s *Server) Start() error {
 	site.HandleFunc("/markComplete", s.markAsCompleted).Methods(http.MethodPatch)
 	site.HandleFunc("/markIncomplete", s.markAsIncomplete).Methods(http.MethodPatch)
 	site.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
+	site.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
@@ -56,7 +58,7 @@ func (s *Server) Start() error {
 
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "PATCH"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "PATCH", "DELETE"})
 
 	s.server = &http.Server{
 		Addr:    ":8080",
