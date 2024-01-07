@@ -47,7 +47,16 @@ func (db *DB) GetTaskById(userId string, taskId string) (types.SqlTasksRow, erro
 func (db *DB) GetAllTasksByUser(uuid string) ([]types.SqlTasksRow, error) {
 	var tasks []types.SqlTasksRow
 
-	query := "SELECT id, title, body, due, time_created, priority, completed, completed_date FROM tasks WHERE user_id = ? ORDER BY due ASC"
+	query := `SELECT id, title, body, due, time_created, priority, completed, completed_date 
+	FROM tasks 
+	WHERE user_id = ? 
+	ORDER BY 
+		CASE 
+			WHEN priority BETWEEN 1 AND 5 THEN priority
+			ELSE 6
+		END,
+	due, priority ASC`
+
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
@@ -74,7 +83,16 @@ func (db *DB) GetAllTasksByUser(uuid string) ([]types.SqlTasksRow, error) {
 func (db *DB) GetCompletedTasks(uuid string) ([]types.SqlTasksRow, error) {
 	var tasks []types.SqlTasksRow
 
-	query := "SELECT id, title, body, due, time_created, priority, completed, completed_date FROM tasks WHERE user_id = ? AND completed = true ORDER BY due ASC"
+	query := `SELECT id, title, body, due, time_created, priority, completed, completed_date 
+	FROM tasks 
+	WHERE user_id = ? AND completed = true 
+	ORDER BY 
+		CASE 
+			WHEN priority BETWEEN 1 AND 5 THEN priority
+			ELSE 6
+		END,
+	due, priority ASC`
+
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
@@ -100,7 +118,17 @@ func (db *DB) GetCompletedTasks(uuid string) ([]types.SqlTasksRow, error) {
 func (db *DB) GetIncompleteTasks(uuid string) ([]types.SqlTasksRow, error) {
 	var tasks []types.SqlTasksRow
 
-	query := "SELECT id, title, body, due, time_created, priority, completed, completed_date FROM tasks WHERE user_id = ? AND completed = false ORDER BY due ASC"
+	query := `
+	SELECT id, title, body, due, time_created, priority, completed, completed_date 
+	FROM tasks 
+	WHERE user_id = ? AND completed = false 
+	ORDER BY 
+		CASE 
+			WHEN priority BETWEEN 1 AND 5 THEN priority
+			ELSE 6
+		END,
+	due, priority ASC`
+
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return tasks, err
