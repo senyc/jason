@@ -15,15 +15,37 @@ var (
 
 const uniqeConstraintErrorId = 1062
 
+func (db *DB) GetAddedTasksCount(userId string) (int, error) {
+	var addedTasksCount int
+	query := "SELECT added_tasks FROM users WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return addedTasksCount, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId).Scan(&addedTasksCount)
+	if err == sql.ErrNoRows {
+		return addedTasksCount, NoTasksFoundError
+	}
+	return addedTasksCount, err
+}
+
 func (db *DB) AddNewTask(newTask types.NewTaskPayload, userId string) error {
-	query := "INSERT INTO tasks (user_id, title, body, priority, due) VALUES (?, ?, ?, ?, ?)"
+	query := "INSERT INTO tasks (user_id, id, title, body, priority, due) VALUES (?, ?, ?, ?, ?, ?)"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(userId, newTask.Title, newTask.Body, newTask.Priority, newTask.Due)
+	// Gets monotonically increasing number of tasks that have been added for the user
+	taskId, err := db.GetAddedTasksCount(userId)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(userId, taskId, newTask.Title, newTask.Body, newTask.Priority, newTask.Due)
 	return err
 }
 
