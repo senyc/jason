@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
@@ -314,4 +316,34 @@ func (db *DB) DeleteTask(userId string, taskId string) error {
 		return NoTasksFoundError
 	}
 	return nil
+}
+
+func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
+	var sb strings.Builder
+	sb.WriteString("UPDATE tasks SET")
+
+	if taskPayload.Title != "" {
+		sb.WriteString(fmt.Sprintf(" title = \"%s\"", taskPayload.Title))
+	}
+
+	if taskPayload.Body != "" {
+		sb.WriteString(fmt.Sprintf(" body = \"%s\"", taskPayload.Body))
+	}
+
+	if taskPayload.Priority != 0 {
+		sb.WriteString(fmt.Sprintf(" priority = \"%d\"", taskPayload.Priority))
+	}
+	// if taskPayload.Due != nil {
+	// 	sb.WriteString(fmt.Sprintf(" due = %d", taskPayload.Priority))
+	// }
+
+	sb.WriteString(" WHERE user_id = ? AND id = ?")
+	stmt, err := db.conn.Prepare(sb.String())
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(userId, taskPayload.Id)
+	return err
 }

@@ -138,7 +138,6 @@ func (s *Server) addNewTask(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		s.logger.Panic(err)
 	}
-
 	err = s.db.AddNewTask(newTask, uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -429,7 +428,6 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(noContext)
-
 	}
 
 	err := s.db.DeleteTask(uuid, id)
@@ -445,6 +443,37 @@ func (s *Server) deleteTask(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(j)
 			return
+		} else {
+			s.logger.Panic(err)
+		}
+	}
+}
+
+func (s *Server) editTask(w http.ResponseWriter, req *http.Request) {
+	var editPayload types.EditTaskPayload
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	err := json.NewDecoder(req.Body).Decode(&editPayload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	err = s.db.EditTask(uuid, editPayload)
+	if err != nil {
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				s.logger.Panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
 		} else {
 			s.logger.Panic(err)
 		}

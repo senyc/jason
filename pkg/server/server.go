@@ -41,6 +41,7 @@ func (s *Server) Start() error {
 	tasks.HandleFunc("/markIncomplete", s.markAsIncomplete).Methods(http.MethodPatch)
 	tasks.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
 	tasks.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
+	tasks.HandleFunc("/edit", s.editTask).Methods(http.MethodPatch)
 
 	site.Use(s.jwtAuthorizationMiddleware)
 	site.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
@@ -51,6 +52,7 @@ func (s *Server) Start() error {
 	site.HandleFunc("/markIncomplete", s.markAsIncomplete).Methods(http.MethodPatch)
 	site.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
 	site.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
+	site.HandleFunc("/edit", s.editTask).Methods(http.MethodPatch)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)

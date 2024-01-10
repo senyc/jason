@@ -64,6 +64,14 @@ type NewTaskPayload struct {
 	Priority int16     `json:"priority,omitempty"`
 }
 
+type EditTaskPayload struct {
+	Id       int        `json:"id"`
+	Title    string     `json:"title,omitempty"`
+	Body     string     `json:"body,omitempty"`
+	Due      *time.Time `json:"due,omitempty"`
+	Priority int16      `json:"priority,omitempty"`
+}
+
 type UserLoginPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
