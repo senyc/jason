@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
@@ -319,26 +318,30 @@ func (db *DB) DeleteTask(userId string, taskId string) error {
 }
 
 func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
-	var sb strings.Builder
-	sb.WriteString("UPDATE tasks SET")
+	var query string
+	query = "UPDATE tasks SET"
 
 	if taskPayload.Title != "" {
-		sb.WriteString(fmt.Sprintf(" title = \"%s\"", taskPayload.Title))
+		query += fmt.Sprintf(" title = \"%s\",", taskPayload.Title)
 	}
 
 	if taskPayload.Body != "" {
-		sb.WriteString(fmt.Sprintf(" body = \"%s\"", taskPayload.Body))
+		query += fmt.Sprintf(" body = \"%s\",", taskPayload.Body)
 	}
 
 	if taskPayload.Priority != 0 {
-		sb.WriteString(fmt.Sprintf(" priority = \"%d\"", taskPayload.Priority))
+		query += fmt.Sprintf(" priority = \"%d\",", taskPayload.Priority)
 	}
+
 	// if taskPayload.Due != nil {
-	// 	sb.WriteString(fmt.Sprintf(" due = %d", taskPayload.Priority))
+	// 	query += fmt.Sprint(" due = \"", *taskPayload.Due, "\",")
 	// }
 
-	sb.WriteString(" WHERE user_id = ? AND id = ?")
-	stmt, err := db.conn.Prepare(sb.String())
+	if query[len(query)-1] == ',' {
+		query = query[:len(query)-1]
+	}
+	query += " WHERE user_id = ? AND id = ?"
+	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
 	}
