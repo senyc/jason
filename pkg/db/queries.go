@@ -318,28 +318,35 @@ func (db *DB) DeleteTask(userId string, taskId string) error {
 }
 
 func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
-	var query string
-	query = "UPDATE tasks SET"
+	var payloads []any
+	query := "UPDATE tasks SET"
 
 	if taskPayload.Title != "" {
-		query += fmt.Sprintf(" title = \"%s\",", taskPayload.Title)
+		query += fmt.Sprintf(" title = ?,")
+		payloads = append(payloads, taskPayload.Title)
 	}
 
 	if taskPayload.Body != "" {
-		query += fmt.Sprintf(" body = \"%s\",", taskPayload.Body)
+		query += fmt.Sprintf(" body = ?,")
+		payloads = append(payloads, taskPayload.Body)
 	}
 
 	if taskPayload.Priority != 0 {
-		query += fmt.Sprintf(" priority = \"%d\",", taskPayload.Priority)
+		query += fmt.Sprintf(" priority = ?,")
+		payloads = append(payloads, taskPayload.Priority)
 	}
 
-	// if taskPayload.Due != nil {
-	// 	query += fmt.Sprint(" due = \"", *taskPayload.Due, "\",")
-	// }
+	if taskPayload.Due != nil {
+		query += fmt.Sprint(" due = ?,")
+		payloads = append(payloads, &taskPayload.Due)
+	}
 
+	// TODO: perform this check in the handler level, we should be able to always remove last comma
+	// Removes last comma otherwise sql invalid
 	if query[len(query)-1] == ',' {
 		query = query[:len(query)-1]
 	}
+
 	query += " WHERE user_id = ? AND id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
@@ -347,6 +354,7 @@ func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(userId, taskPayload.Id)
+	// Unpacks all of the values that are required in the built query
+	_, err = stmt.Exec(append(payloads, userId, taskPayload.Id)...)
 	return err
 }
