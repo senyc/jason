@@ -16,6 +16,7 @@ var (
 	noContext         error = errors.New("Failure obtaining userId from context")
 	noIdFound         error = errors.New("No identification provided")
 	inCorrectPassword error = errors.New("Incorrect password, please try again")
+	noLoginExists     error = errors.New("No login exists for this email address, please try again")
 )
 
 func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
@@ -385,8 +386,15 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 	}
 	encryptedPass, err := s.db.GetPasswordFromLogin(userAuth.Email)
 	if err != nil {
+		errResponse := types.ErrResponse{Message: noLoginExists.Error()}
+		j, err := json.Marshal(errResponse)
+		if err != nil {
+			s.logger.Panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
-		s.logger.Panic(err)
+		w.Write(j)
+		return
 	}
 	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
