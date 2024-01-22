@@ -53,6 +53,7 @@ func (s *Server) Start() error {
 	site.HandleFunc("/new", s.addNewTask).Methods(http.MethodPost)
 	site.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
 	site.HandleFunc("/edit", s.editTask).Methods(http.MethodPatch)
+	site.HandleFunc("/getEmail", s.getEmail).Methods(http.MethodGet)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)

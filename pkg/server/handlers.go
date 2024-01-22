@@ -479,3 +479,27 @@ func (s *Server) editTask(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 }
+
+func (s *Server) getEmail(w http.ResponseWriter, req *http.Request) {
+	var emailResponse types.EmailResponse
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	email, err := s.db.GetEmail(uuid)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	emailResponse.Email = email
+	j, err := json.Marshal(emailResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+}

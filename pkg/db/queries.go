@@ -358,3 +358,19 @@ func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
 	_, err = stmt.Exec(append(payloads, userId, taskPayload.Id)...)
 	return err
 }
+
+func (db *DB) GetEmail(userId string) (string, error) {
+	var result string
+	query := "SELECT email from users WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId).Scan(&result)
+
+	return result, err
+}

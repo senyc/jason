@@ -77,6 +77,10 @@ type UserLoginPayload struct {
 	Password string `json:"password"`
 }
 
+type EmailResponse struct {
+	Email string `json:"email"`
+}
+
 type User struct {
 	UserLoginPayload
 	AccountType string `json:"accountType,omitempty"`
