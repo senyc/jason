@@ -11,8 +11,6 @@ RUN CGO_ENABLED=0 go build -o jason-run
 
 FROM docker.io/alpine:3
 COPY --from=builder /build/cmd/jason/jason-run /jason-run
-COPY --from=builder /build/.env /.env
-COPY --from=builder /build/private_key.pem /private_key.pem
 
 EXPOSE 8080
 
