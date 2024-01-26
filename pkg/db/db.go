@@ -16,8 +16,8 @@ type DB struct {
 func (db *DB) Connect() error {
 	pass := os.Getenv("DB_PASS")
 	user := os.Getenv("DB_USER")
-	port := os.Getenv("DB_PORT")
-	domain := os.Getenv("DOMAIN")
+	port := os.Getenv("MARIADB_SERVICE_SERVICE_PORT")
+	domain := os.Getenv("MARIADB_SERVICE_SERVICE_HOST")
 
 	if pass == "" {
 		return errors.New("No password found")
