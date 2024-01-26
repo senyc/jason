@@ -25,5 +25,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: ${{ env.TAG_NAME }}
+          tags: senyc/jason:backend 
           push: true
