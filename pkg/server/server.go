@@ -54,6 +54,8 @@ func (s *Server) Start() error {
 	site.HandleFunc("/delete", s.deleteTask).Methods(http.MethodDelete)
 	site.HandleFunc("/edit", s.editTask).Methods(http.MethodPatch)
 	site.HandleFunc("/getEmail", s.getEmail).Methods(http.MethodGet)
+	site.HandleFunc("/getSyncTime", s.getSyncTime).Methods(http.MethodGet)
+	site.HandleFunc("/getAccountCreationDate", s.getAccountCreationDate).Methods(http.MethodGet)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)

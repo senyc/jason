@@ -103,6 +103,14 @@ type JwtResponse struct {
 	Jwt string `json:"jwt"`
 }
 
+type SyncTimeResponse struct {
+	SyncTime time.Time `json:"syncTime"`
+}
+
+type AccountCreationDateResponse struct {
+	AccountCreationDate time.Time `json:"accountCreationDate"`
+}
+
 type ErrResponse struct {
 	Message string `json:"message"`
 }

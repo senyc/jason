@@ -511,3 +511,51 @@ func (s *Server) getEmail(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(j)
 }
+
+func (s *Server) getSyncTime(w http.ResponseWriter, req *http.Request) {
+	var syncTimeResponse types.SyncTimeResponse
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	syncTime, err := s.db.GetLastAccessed(uuid)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	syncTimeResponse.SyncTime = syncTime
+	j, err := json.Marshal(syncTimeResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+}
+
+func (s *Server) getAccountCreationDate(w http.ResponseWriter, req *http.Request) {
+	var syncTimeResponse types.AccountCreationDateResponse
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	accountDate, err := s.db.GetAccountCreationDate(uuid)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	syncTimeResponse.AccountCreationDate = accountDate
+	j, err := json.Marshal(syncTimeResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+}

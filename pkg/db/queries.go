@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/senyc/jason/pkg/types"
@@ -362,6 +363,38 @@ func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
 func (db *DB) GetEmail(userId string) (string, error) {
 	var result string
 	query := "SELECT email from users WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId).Scan(&result)
+
+	return result, err
+}
+
+func (db *DB) GetLastAccessed(userId string) (time.Time, error) {
+	var result time.Time
+	query := "SELECT last_accessed from users WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(userId).Scan(&result)
+
+	return result, err
+}
+
+func (db *DB) GetAccountCreationDate(userId string) (time.Time, error) {
+	var result time.Time
+	query := "SELECT time_created from users WHERE id = ?"
 
 	stmt, err := db.conn.Prepare(query)
 
