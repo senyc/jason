@@ -134,3 +134,11 @@ type AccountCreationDateResponse struct {
 type ErrResponse struct {
 	Message string `json:"message"`
 }
+
+type ProfilePhotoResponse struct {
+	ProfilePhoto string `json:"profilePhoto"`
+}
+
+type ProfilePhotoPayload struct {
+	ProfilePhoto int `json:"profilePhoto"`
+}

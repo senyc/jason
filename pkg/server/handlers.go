@@ -40,6 +40,11 @@ func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
 		res = append(res, task)
 	}
 
+	err = s.db.UpdateLastAccessedToNow(uuid)
+	if err != nil {
+		s.logger.Panic(err)
+	}
+
 	j, err := json.Marshal(res)
 
 	if err != nil {
@@ -76,6 +81,11 @@ func (s *Server) getIncompleteTasks(w http.ResponseWriter, req *http.Request) {
 		res = append(res, task)
 	}
 
+	err = s.db.UpdateLastAccessedToNow(uuid)
+	if err != nil {
+		s.logger.Panic(err)
+	}
+
 	j, err := json.Marshal(res)
 
 	if err != nil {
@@ -106,14 +116,20 @@ func (s *Server) getAllTasks(w http.ResponseWriter, req *http.Request) {
 		s.logger.Panic(err)
 	}
 
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
 	for _, row := range allTasks {
 		task, _ := dbconv.ToTaskResponse(row)
 		res = append(res, task)
 	}
+
 	j, err := json.Marshal(res)
 
+	err = s.db.UpdateLastAccessedToNow(uuid)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(err)
 	}
 
@@ -312,7 +328,6 @@ func (s *Server) markAsCompleted(w http.ResponseWriter, req *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(noContext)
-
 	}
 
 	err := s.db.MarkTaskCompleted(uuid, id)
@@ -572,4 +587,177 @@ func (s *Server) getAccountCreationDate(w http.ResponseWriter, req *http.Request
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(j)
+}
+
+func (s *Server) getAllApiKeys(w http.ResponseWriter, req *http.Request) {
+	var apiKeyMetadataResponse []types.ApiKeyMetadata
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	apiKeyMetadataResponse, err := s.db.GetAllApiKeyMetadata(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	j, err := json.Marshal(apiKeyMetadataResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+}
+
+func (s *Server) revokeAllApiKeys(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+	err := s.db.RevokeAllApiKeys(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+}
+
+func (s *Server) revokeApiKey(w http.ResponseWriter, req *http.Request) {
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		res := types.ErrResponse{Message: noIdFound.Error()}
+		j, err := json.Marshal(res)
+		if err != nil {
+			s.logger.Panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
+	}
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := s.db.RevokeApiKey(uuid, id)
+	if err != nil {
+		if err == db.NoTasksFoundError {
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := types.ErrResponse{Message: err.Error()}
+			j, err := json.Marshal(res)
+			if err != nil {
+				s.logger.Panic(err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(j)
+			return
+		} else {
+			s.logger.Panic(err)
+		}
+	}
+}
+
+func (s *Server) changeEmailAddress(w http.ResponseWriter, req *http.Request) {
+	var payload types.ChangeEmailAddressPayload
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&payload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	err = s.db.ChangeEmailAddress(uuid, payload.NewEmail)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) deleteAccount(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := s.db.DeleteAllTasks(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	err = s.db.DeleteAllApiKeys(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	err = s.db.DeleteUser(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) getProfilePhoto(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	profilePhoto, err := s.db.GetProfilePhoto(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	j, err := json.Marshal(types.ProfilePhotoResponse{ProfilePhoto: profilePhoto})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(j)
+}
+
+func (s *Server) changeProfilePhoto(w http.ResponseWriter, req *http.Request) {
+	var payload types.ProfilePhotoPayload
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&payload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	err = s.db.ChangeProfilePhoto(uuid, payload.ProfilePhoto)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
 }

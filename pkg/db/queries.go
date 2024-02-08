@@ -422,3 +422,142 @@ func (db *DB) GetAccountCreationDate(userId string) (time.Time, error) {
 
 	return result, err
 }
+
+func (db *DB) GetAllApiKeyMetadata(uuid string) ([]types.ApiKeyMetadata, error) {
+	var result []types.ApiKeyMetadata
+
+	query := "SELECT label, id, description, expiration, last_used, time_created FROM api_keys WHERE user_id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(uuid)
+	if err != nil {
+		// Handle empty row path
+		return result, err
+	}
+
+	for rows.Next() {
+		var row types.ApiKeyMetadata
+		err = rows.Scan(&row.Label, &row.Id, &row.Description, &row.Expiration, &row.LastAccessed, &row.CreationDate)
+		if err != nil {
+			return result, err
+		}
+		result = append(result, row)
+	}
+	return result, nil
+}
+
+func (db *DB) RevokeAllApiKeys(uuid string) error {
+	query := "DELETE FROM api_keys WHERE user_id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) RevokeApiKey(uuid string, id string) error {
+	query := "DELETE FROM api_keys WHERE user_id = ? AND id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid, id)
+	return err
+}
+
+func (db *DB) UpdateLastAccessedToNow(uuid string) error {
+	query := "UPDATE users SET last_accessed = CURTIME() WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) ChangeEmailAddress(uuid string, newEmail string) error {
+	query := "UPDATE users SET email = ? WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(newEmail, uuid)
+	return err
+}
+
+func (db *DB) DeleteAllTasks(uuid string) error {
+	query := "DELETE FROM tasks where user_id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) DeleteAllApiKeys(uuid string) error {
+	query := "DELETE FROM api_keys where user_id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) DeleteUser(uuid string) error {
+	query := "DELETE FROM users WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) GetProfilePhoto(uuid string) (string, error) {
+	query := "SELECT profile_photo FROM users WHERE id = ?"
+	var result string
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(uuid).Scan(&result)
+	return result, err
+}
+
+func (db *DB) ChangeProfilePhoto(uuid string, profilePhoto int) error {
+	query := "UPDATE users set profile_photo = ? WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(profilePhoto, uuid)
+	return err
+}

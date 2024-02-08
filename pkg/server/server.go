@@ -58,6 +58,15 @@ func (s *Server) Start() error {
 	site.HandleFunc("/getEmail", s.getEmail).Methods(http.MethodGet)
 	site.HandleFunc("/getSyncTime", s.getSyncTime).Methods(http.MethodGet)
 	site.HandleFunc("/getAccountCreationDate", s.getAccountCreationDate).Methods(http.MethodGet)
+	site.HandleFunc("/changeEmailAddress", s.changeEmailAddress).Methods(http.MethodPost)
+	site.HandleFunc("/deleteAccount", s.deleteAccount).Methods(http.MethodDelete)
+	site.HandleFunc("/getProfilePhoto", s.getProfilePhoto).Methods(http.MethodGet)
+	site.HandleFunc("/changeProfilePhoto", s.changeProfilePhoto).Methods(http.MethodPost)
+
+	site.HandleFunc("/key/new", s.newApiKey).Methods(http.MethodPost)
+	site.HandleFunc("/key/all", s.getAllApiKeys).Methods(http.MethodGet)
+	site.HandleFunc("/key/revoke", s.revokeApiKey).Methods(http.MethodDelete)
+	site.HandleFunc("/key/revoke/all", s.revokeAllApiKeys).Methods(http.MethodDelete)
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
