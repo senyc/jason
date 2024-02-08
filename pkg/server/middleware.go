@@ -11,6 +11,14 @@ import (
 	"github.com/senyc/jason/pkg/types"
 )
 
+func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.logger.Println(r.RequestURI)
+		s.logger.Println(r.GetBody)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("Authorization")

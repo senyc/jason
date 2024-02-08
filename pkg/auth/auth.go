@@ -18,7 +18,7 @@ import (
 
 var KeyLength = 16
 
-func GetApiKey() (string, error) {
+func GetNewApiKey() (string, error) {
 	var result string
 	b := make([]byte, KeyLength)
 	_, err := rand.Read(b)

@@ -205,24 +205,38 @@ func (s *Server) getTaskById(w http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) newApiKey(w http.ResponseWriter, req *http.Request) {
-	var userLogin types.Email
-	err := json.NewDecoder(req.Body).Decode(&userLogin)
+	var apiKeyPayload types.ApiKeyPayload
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&apiKeyPayload)
 	if err != nil {
 		s.logger.Panic(err)
 	}
 
-	apiKey, err := auth.GetApiKey()
+	apiKey, err := auth.GetNewApiKey()
 	if err != nil {
 		s.logger.Panic(err)
 	}
 
-	err = s.db.AddApiKey(userLogin.Email, auth.EncryptApiKey(apiKey))
-
+	err = s.db.AddApiKey(uuid, auth.EncryptApiKey(apiKey), apiKeyPayload)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		s.logger.Panic(err)
 	}
-	response := types.ApiKey{ApiKey: apiKey}
+
+	// Gets the id of the api key in case the user wants to immediately delete it
+	keyMetadata, err := s.db.GetApiKeyMetadata(auth.EncryptApiKey(apiKey))
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		s.logger.Panic(err)
+	}
+
+	response := types.ApiKeyResponse{ApiKey: apiKey, ApiKeyId: keyMetadata.Id}
 
 	j, err := json.Marshal(response)
 	if err != nil {

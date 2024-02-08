@@ -72,6 +72,12 @@ type EditTaskPayload struct {
 	Priority int16      `json:"priority,omitempty"`
 }
 
+type ApiKeyPayload struct {
+	Label       string     `json:"label"`
+	Description string     `json:"description,omitempty"`
+	Expiration  *time.Time `json:"expiration,omitempty"`
+}
+
 type UserLoginPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -86,17 +92,31 @@ type User struct {
 	AccountType string `json:"accountType,omitempty"`
 }
 
-type ApiKey struct {
-	ApiKey string `json:"key"`
+type ChangeEmailAddressPayload struct {
+	NewEmail string `json:"newEmail"`
+}
+
+type ApiKeyResponse struct {
+	ApiKeyId string `json:"id"`
+	ApiKey   string `json:"apikey"`
+}
+
+type ApiKeyMetadata struct {
+	Id           string     `json:"id"`
+	Label        string     `json:"label"`
+	Description  string     `json:"description"`
+	Expiration   time.Time  `json:"expiration"`
+	LastAccessed *time.Time `json:"lastAccessed"`
+	CreationDate time.Time  `json:"creationDate"`
 }
 
 type Email struct {
 	Email string `json:"email"`
 }
+
 type JwtClaims struct {
 	jwt.RegisteredClaims
 	Uuid string `json:"uuid"`
-	// Add more custom claims here
 }
 
 type JwtResponse struct {

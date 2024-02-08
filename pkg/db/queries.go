@@ -234,11 +234,12 @@ func (db *DB) MarkTaskIncomplete(userId string, taskId string) error {
 	if v, _ := result.RowsAffected(); v == 0 {
 		return NoTasksFoundError
 	}
+
 	return nil
 }
 
-func (db *DB) AddApiKey(userLogin string, apiKey string) error {
-	query := "UPDATE users SET api_key = ? WHERE email = ?"
+func (db *DB) AddApiKey(uuid string, apiKey string, apiKeyMetadata types.ApiKeyPayload) error {
+	query := "INSERT INTO api_keys (user_id, label, description, api_key, expiration) VALUES (?, ?, ?, ?, ?)"
 
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
@@ -246,8 +247,22 @@ func (db *DB) AddApiKey(userLogin string, apiKey string) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(apiKey, userLogin)
+	_, err = stmt.Exec(uuid, apiKeyMetadata.Label, apiKeyMetadata.Description, apiKey, apiKeyMetadata.Expiration)
 	return err
+}
+
+func (db *DB) GetApiKeyMetadata(encryptedApiKey string) (types.ApiKeyMetadata, error) {
+	var result types.ApiKeyMetadata
+	query := "SELECT label, id, description, expiration, last_used, time_created FROM api_keys WHERE api_key = ?"
+
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(encryptedApiKey).Scan(&result.Label, &result.Id, &result.Description, &result.Expiration, &result.LastAccessed, &result.CreationDate)
+	return result, err
 }
 
 func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
@@ -268,7 +283,7 @@ func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
 
 func (db *DB) GetPasswordFromLogin(login string) (string, error) {
 	var result string
-	query := "SELECT password from users WHERE email = ?"
+	query := "SELECT password FROM users WHERE email = ?"
 
 	stmt, err := db.conn.Prepare(query)
 

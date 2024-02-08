@@ -24,13 +24,15 @@ func (s *Server) Start() error {
 	if err != nil {
 		return err
 	}
-	s.logger = log.New(os.Stdout, "log:", log.LstdFlags|log.Lshortfile)
+	s.logger = log.New(os.Stdout, "log: ", log.LstdFlags|log.Lshortfile)
 
 	r := mux.NewRouter()
 
 	tasks := r.PathPrefix("/api/tasks/").Subrouter()
 	user := r.PathPrefix("/api/user/").Subrouter()
 	site := r.PathPrefix("/site/tasks/").Subrouter()
+
+	r.Use(s.loggingMiddleware)
 
 	tasks.Use(s.autorizationMiddleware)
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
@@ -59,11 +61,10 @@ func (s *Server) Start() error {
 
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
-	user.HandleFunc("/key/new", s.newApiKey).Methods(http.MethodPost)
 
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "PATCH", "DELETE"})
+	methodsOk := handlers.AllowedMethods([]string{http.MethodPost, http.MethodGet, http.MethodDelete, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodHead})
 
 	s.server = &http.Server{
 		Addr:    ":8080",
