@@ -14,7 +14,6 @@ import (
 func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.logger.Println(r.RequestURI)
-		s.logger.Println(r.GetBody)
 		next.ServeHTTP(w, r)
 	})
 }
