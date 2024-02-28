@@ -18,7 +18,20 @@ func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) autorizationMiddleware(next http.Handler) http.Handler {
+func (s *Server) apiUsageMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := r.Header.Get("Authorization")
+		userId, err := s.db.GetUserIdFromApiKey(auth.EncryptApiKey(key))
+		if err != nil {
+			s.logger.Panic(err)
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+		err = s.db.IncrementUserApiUsage(userId)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) authorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("Authorization")
 		userId, err := s.db.GetUserIdFromApiKey(auth.EncryptApiKey(key))

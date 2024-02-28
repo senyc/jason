@@ -34,7 +34,8 @@ func (s *Server) Start() error {
 
 	r.Use(s.loggingMiddleware)
 
-	tasks.Use(s.autorizationMiddleware)
+	tasks.Use(s.apiUsageMiddleware)
+	tasks.Use(s.authorizationMiddleware)
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/complete", s.getCompletedTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/incomplete", s.getIncompleteTasks).Methods(http.MethodGet)
@@ -85,6 +86,5 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown() error {
-	// also close the db from here
 	return s.server.Close()
 }
