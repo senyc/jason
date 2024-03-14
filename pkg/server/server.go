@@ -34,7 +34,7 @@ func (s *Server) Start() error {
 
 	r.Use(s.loggingMiddleware)
 
-	tasks.Use(s.autorizationMiddleware)
+	tasks.Use(s.authorizationMiddleware)
 	tasks.HandleFunc("/all", s.getAllTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/complete", s.getCompletedTasks).Methods(http.MethodGet)
 	tasks.HandleFunc("/incomplete", s.getIncompleteTasks).Methods(http.MethodGet)
