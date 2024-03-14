@@ -268,7 +268,7 @@ func (db *DB) GetApiKeyMetadata(encryptedApiKey string) (types.ApiKeyMetadata, e
 func (db *DB) GetUserIdFromApiKey(apiKey string) (string, error) {
 	var userId string
 
-	query := "SELECT id FROM users WHERE api_key = ?"
+	query := "SELECT user_id FROM api_keys WHERE api_key = ?"
 
 	stmt, err := db.conn.Prepare(query)
 
