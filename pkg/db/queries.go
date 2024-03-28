@@ -561,3 +561,15 @@ func (db *DB) ChangeProfilePhoto(uuid string, profilePhoto int) error {
 	_, err = stmt.Exec(profilePhoto, uuid)
 	return err
 }
+
+func (db *DB) IncrementApiKeyUsage(uuid string) error {
+	query := "UPDATE users set monthly_api_key_usage = monthly_api_key_usage + 1 WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}

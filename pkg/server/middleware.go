@@ -22,6 +22,9 @@ func (s *Server) authorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("Authorization")
 		userId, err := s.db.GetUserIdFromApiKey(auth.EncryptApiKey(key))
+		if err == nil {
+			err = s.db.IncrementApiKeyUsage(userId)
+		}
 
 		if err == nil {
 			ctx := context.WithValue(r.Context(), "userId", userId)
