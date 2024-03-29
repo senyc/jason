@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/senyc/jason/pkg/auth"
+	"github.com/senyc/jason/pkg/contact"
 	"github.com/senyc/jason/pkg/db"
 	"github.com/senyc/jason/pkg/dbconv"
 
@@ -15,8 +16,9 @@ import (
 var (
 	noContext         error = errors.New("Failure obtaining userId from context")
 	noIdFound         error = errors.New("No identification provided")
-	inCorrectPassword error = errors.New("Incorrect password, please try again")
+	incorrectPassword error = errors.New("Incorrect password, please try again")
 	noLoginExists     error = errors.New("No login exists for this email address, please try again")
+	noPasswordExists     error = errors.New("Password has been reset, please enter a new password")
 )
 
 func (s *Server) getCompletedTasks(w http.ResponseWriter, req *http.Request) {
@@ -424,10 +426,21 @@ func (s *Server) login(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write(j)
 		return
+	} else if encryptedPass == "" {
+		errResponse := types.ErrResponse{Message: noPasswordExists.Error()}
+		j, err := json.Marshal(errResponse)
+		if err != nil {
+			s.logger.Panic(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(j)
+		return
 	}
-	if err := auth.IsAuthorized(userAuth.Password, encryptedPass); err != nil {
+	
+	err = auth.IsAuthorized(userAuth.Password, encryptedPass)
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		errResponse := types.ErrResponse{Message: inCorrectPassword.Error()}
+		errResponse := types.ErrResponse{Message: incorrectPassword.Error()}
 		j, err := json.Marshal(errResponse)
 		if err != nil {
 			s.logger.Panic(err)
@@ -525,7 +538,7 @@ func (s *Server) getEmail(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		s.logger.Panic(noContext)
 	}
-	email, err := s.db.GetEmail(uuid)
+	email, err := s.db.GetEmailAddress(uuid)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -760,4 +773,98 @@ func (s *Server) changeProfilePhoto(w http.ResponseWriter, req *http.Request) {
 		s.logger.Panic(err)
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) resetUserPassword(w http.ResponseWriter, req *http.Request) {
+	var passwordRequestToken types.ResetPasswordRequestPayload
+
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&passwordRequestToken)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	userToken, err := s.db.GetResetPasswordToken(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	
+	if !auth.DeletionRequestValid(passwordRequestToken.ResetToken, userToken) {
+		w.WriteHeader(http.StatusUnauthorized)
+		s.logger.Panic(err)
+	} 
+	err = s.db.ClearUserPassword(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	// Empties the token so they can't be reused if it is compromised
+	err = s.db.SetForgotPasswordToken(uuid, "")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) setNewUserPassword(w http.ResponseWriter, req *http.Request) {
+	var resetPasswordPayload types.ResetPasswordPayload
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&resetPasswordPayload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	newPassword, _ := auth.EncryptPassword(resetPasswordPayload.NewPassword)
+	err = s.db.SetNewPassword(uuid, newPassword)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+}
+
+func (s *Server) sendForgotPasswordRequest(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	uuid, ok := ctx.Value("userId").(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(noContext)
+	}
+
+	userToken, _ := auth.GetNewApiKey()
+	err := s.db.SetForgotPasswordToken(uuid, userToken)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	email, err := s.db.GetEmailAddress(uuid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+	err = contact.SendResetEmail(email, userToken)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		s.logger.Panic(err)
+	}
+
+	// user will be rerouted to a default forgot password page 
+	// after filling out the information the user will have their password reset
+	// we will need to add a check for an empty password though to redirect people without passwords to the forgot password page
 }

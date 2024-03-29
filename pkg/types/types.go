@@ -142,3 +142,11 @@ type ProfilePhotoResponse struct {
 type ProfilePhotoPayload struct {
 	ProfilePhoto int `json:"profilePhoto"`
 }
+
+type ResetPasswordRequestPayload struct {
+	ResetToken string `json:"token"`
+}
+
+type ResetPasswordPayload struct {
+	NewPassword string `json:"newPassword"`
+}

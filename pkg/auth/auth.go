@@ -73,3 +73,7 @@ func GetNewJWT(uuid string) (string, error) {
 	encodedJwt, err = j.SignedString(privateKey)
 	return encodedJwt, err
 }
+
+func DeletionRequestValid(sentToken, userToken string) bool {
+	return sentToken == userToken
+}

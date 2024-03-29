@@ -375,7 +375,7 @@ func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
 	return err
 }
 
-func (db *DB) GetEmail(userId string) (string, error) {
+func (db *DB) GetEmailAddress(userId string) (string, error) {
 	var result string
 	query := "SELECT email from users WHERE id = ?"
 
@@ -567,6 +567,58 @@ func (db *DB) IncrementApiKeyUsage(uuid string) error {
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) ClearUserPassword(uuid string) error {
+	query := "UPDATE users set password = NULL WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
+	query := "UPDATE users SET forgot_password_token = ? WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err 
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid)
+	return err
+}
+
+func (db *DB) GetResetPasswordToken(uuid string) (string, error) {
+	var result string
+	query := "SELECT forgot_password_token from users WHERE id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(uuid).Scan(&result)
+
+	return result, err
+}
+
+func (db *DB) SetNewPassword(uuid, password string) error {
+	query := "UPDATE users SET password = ? WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err 
 	}
 	defer stmt.Close()
 
