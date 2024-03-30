@@ -625,3 +625,16 @@ func (db *DB) SetNewPassword(uuid, password string) error {
 	_, err = stmt.Exec(uuid)
 	return err
 }
+
+func (db *DB) GetUuidFromResetPasswordToken(passwordToken string) (string, error) {
+	var result string
+	query := "SELECT id FROM users WHERE forgot_password_token = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(passwordToken).Scan(&result)
+	return result, err
+}

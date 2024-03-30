@@ -148,5 +148,10 @@ type ResetPasswordRequestPayload struct {
 }
 
 type ResetPasswordPayload struct {
+	ResetToken string `json:"token"`
 	NewPassword string `json:"newPassword"`
+}
+
+type SendForgotPasswordEmailPayload struct {
+	Email string `json:"email"`
 }
