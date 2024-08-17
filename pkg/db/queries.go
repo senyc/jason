@@ -574,30 +574,21 @@ func (db *DB) IncrementApiKeyUsage(uuid string) error {
 	return err
 }
 
-func (db *DB) ClearUserPassword(uuid string) error {
-	query := "UPDATE users set password = NULL WHERE id = ?"
+// handle unhappy path where user does not have an account
+func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
+	// We save all password requests for logging purposes
+	query := "INSERT INTO forgot_password_requests (user_id, token) VALUES (?, ?)"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(uuid)
+	_, err = stmt.Exec(uuid, token)
 	return err
 }
 
-func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
-	query := "UPDATE forgot_password_requests SET token = ? WHERE user_id = ?"
-	stmt, err := db.conn.Prepare(query)
-	if err != nil {
-		return err 
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(uuid)
-	return err
-}
-
+// handle unhappy path where user does not have an account
 func (db *DB) GetResetPasswordToken(uuid string) (string, error) {
 	var result string
 	query := "SELECT token FROM forgot_password_requests WHERE user_id = ?"
@@ -618,14 +609,15 @@ func (db *DB) SetNewPassword(uuid, password string) error {
 	query := "UPDATE users SET password = ? WHERE id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
-		return err 
+		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(uuid)
+	_, err = stmt.Exec(password, uuid)
 	return err
 }
 
+// handle unhappy path where user does not have uuid
 func (db *DB) GetUuidFromResetPasswordToken(passwordToken string) (string, error) {
 	var result string
 	query := "SELECT user_id FROM forgot_password_requests WHERE token = ?"

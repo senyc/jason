@@ -74,7 +74,6 @@ func (s *Server) Start() error {
 	// Reset/forgot password process
 	user.HandleFunc("/login/password/sendResetEmail", s.sendForgotPasswordRequest).Methods(http.MethodPost)
 	user.HandleFunc("/login/password/reset", s.resetUserPassword).Methods(http.MethodPost)
-	user.HandleFunc("/login/password/new", s.setNewUserPassword).Methods(http.MethodPost)
 
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})

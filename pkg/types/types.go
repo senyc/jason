@@ -143,13 +143,9 @@ type ProfilePhotoPayload struct {
 	ProfilePhoto int `json:"profilePhoto"`
 }
 
-type ResetPasswordRequestPayload struct {
-	ResetToken string `json:"token"`
-}
-
 type ResetPasswordPayload struct {
 	ResetToken string `json:"token"`
-	NewPassword string `json:"newPassword"`
+	NewPassword string `json:"password"`
 }
 
 type SendForgotPasswordEmailPayload struct {
