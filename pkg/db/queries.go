@@ -15,7 +15,7 @@ var (
 	NewUserUniquenessConstraintError = errors.New("There is already an account with this email, please use another or login")
 )
 
-const uniqeConstraintErrorId = 1062
+const uniqueConstraintErrorId = 1062
 
 func (db *DB) GetAddedTasksCount(userId string) (int, error) {
 	var addedTasksCount int
@@ -188,7 +188,7 @@ func (db *DB) AddNewUser(newUser types.User) error {
 	_, err = stmt.Exec(newUser.Password, newUser.Email, newUser.AccountType)
 	if err != nil {
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			if mysqlErr.Number == uniqeConstraintErrorId {
+			if mysqlErr.Number == uniqueConstraintErrorId {
 				return NewUserUniquenessConstraintError
 			}
 		}
@@ -587,7 +587,7 @@ func (db *DB) ClearUserPassword(uuid string) error {
 }
 
 func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
-	query := "UPDATE users SET forgot_password_token = ? WHERE id = ?"
+	query := "UPDATE forgot_password_requests SET token = ? WHERE user_id = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return err 
@@ -600,7 +600,7 @@ func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
 
 func (db *DB) GetResetPasswordToken(uuid string) (string, error) {
 	var result string
-	query := "SELECT forgot_password_token from users WHERE id = ?"
+	query := "SELECT token FROM forgot_password_requests WHERE user_id = ?"
 
 	stmt, err := db.conn.Prepare(query)
 
@@ -628,7 +628,7 @@ func (db *DB) SetNewPassword(uuid, password string) error {
 
 func (db *DB) GetUuidFromResetPasswordToken(passwordToken string) (string, error) {
 	var result string
-	query := "SELECT id FROM users WHERE forgot_password_token = ?"
+	query := "SELECT user_id FROM forgot_password_requests WHERE token = ?"
 	stmt, err := db.conn.Prepare(query)
 	if err != nil {
 		return result, err

@@ -8,7 +8,7 @@ import (
 )
 
 func SendResetEmail(email string, oneTimeToken string) error {
-	emailContect := fmt.Sprintf(
+	emailContent := fmt.Sprintf(
 	`<html>
 		<body>
 			<p>
@@ -28,7 +28,7 @@ func SendResetEmail(email string, oneTimeToken string) error {
 		},
 		To:          []brevo.SendSmtpEmailTo{{Email: email}},
 		Subject:     "Jasontasks forgot password request",
-		HtmlContent: emailContect,
+		HtmlContent: emailContent,
 	}
 
 	var ctx context.Context
