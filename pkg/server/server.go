@@ -71,6 +71,10 @@ func (s *Server) Start() error {
 	user.HandleFunc("/new", s.addNewUser).Methods(http.MethodPost)
 	user.HandleFunc("/login", s.login).Methods(http.MethodPost)
 
+	// Reset/forgot password process
+	user.HandleFunc("/login/password/sendResetEmail", s.sendForgotPasswordRequest).Methods(http.MethodPost)
+	user.HandleFunc("/login/password/reset", s.resetUserPassword).Methods(http.MethodPost)
+
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	headersOk := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 	methodsOk := handlers.AllowedMethods([]string{http.MethodPost, http.MethodGet, http.MethodDelete, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodHead})

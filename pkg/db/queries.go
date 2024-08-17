@@ -15,7 +15,7 @@ var (
 	NewUserUniquenessConstraintError = errors.New("There is already an account with this email, please use another or login")
 )
 
-const uniqeConstraintErrorId = 1062
+const uniqueConstraintErrorId = 1062
 
 func (db *DB) GetAddedTasksCount(userId string) (int, error) {
 	var addedTasksCount int
@@ -173,7 +173,7 @@ func (db *DB) AddNewUser(newUser types.User) error {
 	_, err = stmt.Exec(newUser.Password, newUser.Email, newUser.AccountType)
 	if err != nil {
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			if mysqlErr.Number == uniqeConstraintErrorId {
+			if mysqlErr.Number == uniqueConstraintErrorId {
 				return NewUserUniquenessConstraintError
 			}
 		}
@@ -360,7 +360,7 @@ func (db *DB) EditTask(userId string, taskPayload types.EditTaskPayload) error {
 	return err
 }
 
-func (db *DB) GetEmail(userId string) (string, error) {
+func (db *DB) GetEmailAddress(userId string) (string, error) {
 	var result string
 	query := "SELECT email from users WHERE id = ?"
 
@@ -557,4 +557,61 @@ func (db *DB) IncrementApiKeyUsage(uuid string) error {
 
 	_, err = stmt.Exec(uuid)
 	return err
+}
+
+// handle unhappy path where user does not have an account
+func (db *DB) SetForgotPasswordToken(uuid string, token string) error {
+	// We save all password requests for logging purposes
+	query := "INSERT INTO forgot_password_requests (user_id, token) VALUES (?, ?)"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(uuid, token)
+	return err
+}
+
+// handle unhappy path where user does not have an account
+func (db *DB) GetResetPasswordToken(uuid string) (string, error) {
+	var result string
+	query := "SELECT token FROM forgot_password_requests WHERE user_id = ?"
+
+	stmt, err := db.conn.Prepare(query)
+
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(uuid).Scan(&result)
+
+	return result, err
+}
+
+func (db *DB) SetNewPassword(uuid, password string) error {
+	query := "UPDATE users SET password = ? WHERE id = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(password, uuid)
+	return err
+}
+
+// handle unhappy path where user does not have uuid
+func (db *DB) GetUuidFromResetPasswordToken(passwordToken string) (string, error) {
+	var result string
+	query := "SELECT user_id FROM forgot_password_requests WHERE token = ?"
+	stmt, err := db.conn.Prepare(query)
+	if err != nil {
+		return result, err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRow(passwordToken).Scan(&result)
+	return result, err
 }
