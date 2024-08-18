@@ -16,7 +16,7 @@ func SendResetEmail(email string, oneTimeToken string) error {
 				Your account (%s) made a request to reset your password. If you would like to do so please click this link:
 			</p>
 			<br>
-			<a href="https://jasontaks.com/login/reset?id=%s">
+			<a href="https://jasontasks.com/login/reset?id=%s">
 				Click here
 			</a>
 		</body>

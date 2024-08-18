@@ -68,7 +68,7 @@ func GetNewJWT(uuid string) (string, error) {
 	j := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 	privateKey, err := GetJwtPrivateKey()
 	if err != nil {
-		return encodedJwt, err
+		panic(err)
 	}
 	encodedJwt, err = j.SignedString(privateKey)
 	return encodedJwt, err
